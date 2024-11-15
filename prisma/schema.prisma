@@ -1,0 +1,474 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  email         String  @unique
+  recoveryEmail String? @unique @map("recovery_email")
+
+  fullName    String  @map("full_name")
+  username    String  @unique
+  avatarPath  String? @map("avatar_path")
+  password    String
+  phoneNumber String? @default("") @map("phone_number")
+
+  birthDate         DateTime @default(now()) @map("birth_date")
+  libraryCardNumber String   @unique @map("library_card_number")
+
+  studentInfo    StudentInfo?
+  employmentInfo EmploymentInfo?
+
+  roles UserRole[] @default([student])
+
+  chatGroups ChatGroup[]
+  messages   Message[]
+  notes      Note[]
+
+  @@map("user")
+}
+
+model StudentInfo {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  studyStartDate DateTime  @default(now()) @map("study_start_date")
+  studyEndDate   DateTime? @default(now()) @map("study_end_date")
+
+  studyForm        StudyForm?      @default(full_time) @map("study_form")
+  educationLevel   EducationLevel? @default(bachelor) @map("education_level")
+  creditCardNumber String?         @unique @map("credit_card_number")
+  fundingSource    FundingSource?  @default(budget) @map("funding_source")
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique @map("user_id")
+
+  group   Group?  @relation(fields: [groupId], references: [id])
+  groupId String? @map("group_id")
+
+  courses             Course[]
+  studentExamsResults StudentExamResult[]
+
+  @@map("student_info")
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name        String  @unique
+  description String?
+
+  flows       Flow[]
+  disciplines Discipline[]
+  teachers    EmploymentInfo[]
+
+  @@map("department")
+}
+
+model Flow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name    String
+  faculty String? @default("Информационные системы и технологии")
+
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String     @map("department_id")
+
+  groups    Group[]
+  classes   Class[]
+  semesters Semester[]
+
+  @@map("flow")
+}
+
+model EmploymentInfo {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  description     String?
+  position        String
+  education       String?  @default("")
+  academicTitles  String[] @default([]) @map("academic_titles")
+  academicDegrees String[] @default([]) @map("academic_degrees")
+
+  workExperience Int       @default(0) @map("work_experience")
+  startDate      DateTime? @map("start_date")
+  endDate        DateTime? @map("end_date")
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique @map("user_id")
+
+  department   Department? @relation(fields: [departmentId], references: [id])
+  departmentId String?     @map("department_id")
+
+  courses     Course[]
+  disciplines Discipline[]
+  classes     Class[]
+  finalTests  FinalTest[]
+
+  @@map("employment_info")
+}
+
+model Semester {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  number String @default("Первый")
+
+  flow   Flow?   @relation(fields: [flowId], references: [id])
+  flowId String? @map("flow_id")
+
+  finalTests FinalTest[]
+
+  @@map("semester")
+}
+
+// model Curriculum {
+//   id        String   @id @default(cuid())
+//   createdAt DateTime @default(now()) @map("created_at")
+//   updatedAt DateTime @updatedAt @map("updated_at")
+
+//   courseNumber  Int @default(2) @map("course_number")
+//   lecturesCount Int @default(8) @map("lectures")
+//   labsCount     Int @default(8) @map("labs_count")
+
+//   semester   Semester @relation(fields: [semesterId], references: [id])
+//   semesterId String   @map("semester_id")
+
+//   disciplines Discipline[]
+
+//   @@map("curriculum")
+// }
+
+model StudentExamResult {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  result ExamResult @default(good)
+  type   ExamType   @default(exam)
+
+  student   StudentInfo @relation(fields: [studentId], references: [id])
+  studentId String      @map("student_id")
+
+  finalTest   FinalTest @relation(fields: [finalTestId], references: [id])
+  finalTestId String    @map("final_test_id")
+
+  @@map("student_exam_result")
+}
+
+model FinalTest {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  date  DateTime?
+  types ExamType[] @default([exam])
+
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+  disciplineId String     @map("discipline_id")
+
+  room   Room?   @relation(fields: [roomId], references: [id])
+  roomId String? @map("room_id")
+
+  semester   Semester @relation(fields: [semesterId], references: [id])
+  semesterId String   @map("semester_id")
+
+  teacher   EmploymentInfo @relation(fields: [teacherId], references: [id])
+  teacherId String         @map("teacher_info_id")
+
+  studentExamsResults StudentExamResult[]
+
+  @@map("final_test")
+}
+
+model Course {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name        String  @unique
+  description String? @default("")
+
+  teachers   EmploymentInfo[]
+  students   StudentInfo[]
+  attachment Attachment[]
+
+  @@map("course")
+}
+
+model Schedule {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dayWeek   DayWeek   @default(monday) @map("day_week")
+  weekType  WeekType  @default(odd) @map("week_type")
+  timeStart DateTime? @default(now()) @map("time_start")
+  timeEnd   DateTime  @default(now()) @map("time_end")
+
+  group   Group?  @relation(fields: [groupId], references: [id])
+  groupId String? @map("group_id")
+
+  classes Class[]
+
+  @@map("schedule")
+}
+
+model Class {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  startTime DateTime  @default(now()) @map("start_date")
+  endTime   DateTime? @default(now()) @map("end_date")
+  type      ClassType @default(lab)
+
+  room   Room   @relation(fields: [roomId], references: [id])
+  roomId String @map("room_id")
+
+  schedule   Schedule? @relation(fields: [scheduleId], references: [id])
+  scheduleId String?   @map("schedule_id")
+
+  teacher   EmploymentInfo? @relation(fields: [teacherId], references: [id])
+  teacherId String?         @map("teacher_id")
+
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+  disciplineId String     @map("discipline_id")
+
+  flows       Flow[]
+  attachments Attachment[]
+  notes       Note[]
+
+  subgroup String?
+
+  @@map("class")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  content   String
+  isPrivate Boolean @default(true) @map("is_private")
+
+  class   Class  @relation(fields: [classId], references: [id])
+  classId String @map("class_id")
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+
+  @@map("note")
+}
+
+model Discipline {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name String @unique
+
+  department   Department? @relation(fields: [departmentId], references: [id])
+  departmentId String?     @map("department_id")
+
+  teachers   EmploymentInfo[]
+  finalTests FinalTest[]
+  classes    Class[]
+
+  @@map("discipline")
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name    String
+  type    RoomType @default(cabinet)
+  address String
+
+  classes    Class[]
+  finalTests FinalTest[]
+
+  @@map("rooms")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  filename String
+  url      String
+
+  class   Class?  @relation(fields: [classId], references: [id])
+  classId String? @map("class_id")
+
+  course   Course? @relation(fields: [courseId], references: [id])
+  courseId String? @map("course_id")
+
+  message   Message? @relation(fields: [messageId], references: [id])
+  messageId String?  @map("message_id")
+
+  @@map("attachment")
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name        String  @unique
+  description String? @default("")
+
+  specialty String? @default("Программная инженерия")
+  profile   String? @default("Искусственный интеллект и предиктивная аналитика")
+
+  flow   Flow?   @relation(fields: [flowId], references: [id])
+  flowId String? @map("flow_id")
+
+  studentInfo StudentInfo[]
+  schedule    Schedule[]
+
+  @@map("group")
+}
+
+model ChatGroup {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name        String
+  description String? @default("")
+
+  members  User[]
+  messages Message[]
+
+  @@map("chat_group")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  text   String
+  status MessageStatus @default(sent)
+
+  sender   User   @relation(fields: [senderId], references: [id])
+  senderId String @map("sender_id")
+
+  chatGroup   ChatGroup @relation(fields: [chatGroupId], references: [id])
+  chatGroupId String    @map("chat_group_id")
+
+  attachments Attachment[]
+
+  @@map("message")
+}
+
+enum UserRole {
+  student
+  teacher
+  course_creator
+  assistant
+  admin
+}
+
+enum StudyForm {
+  full_time
+  part_time
+  extramural
+  distance
+  mixed
+  externship
+}
+
+enum FundingSource {
+  budget
+  paid
+  targeted_training
+  grant
+  scholarship
+}
+
+enum DayWeek {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
+
+enum WeekType {
+  odd
+  even
+}
+
+enum ClassType {
+  lecture
+  lab
+  practice
+  consultation
+  exam
+}
+
+enum EducationLevel {
+  bachelor
+  master
+  doctorate
+  specialty
+  vocational
+  postgraduate
+}
+
+enum RoomType {
+  auditorium
+  cabinet
+  conference_hall
+  lab
+  library
+  computer_class
+}
+
+enum ExamType {
+  exam
+  credit
+  differentiated_credit
+  referat
+  course_work
+  calculation_graphic_work
+}
+
+enum ExamResult {
+  excellent
+  good
+  satisfactory
+  fail
+  credited
+  not_credited
+  absense
+}
+
+enum MessageStatus {
+  sent
+  delivered
+  read
+}
