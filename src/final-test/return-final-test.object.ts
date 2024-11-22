@@ -30,7 +30,7 @@ export const returnFinalTestObject: Prisma.FinalTestSelect = {
 			number: true
 		}
 	},
-	studentExamResults: {
+	studentExamsResults: {
 		select: {
 			result: true,
 			type: true,
@@ -41,7 +41,7 @@ export const returnFinalTestObject: Prisma.FinalTestSelect = {
 							fullName: true
 						}
 					},
-					group: {
+					subgroup: {
 						select: {
 							name: true
 						}

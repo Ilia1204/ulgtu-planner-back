@@ -1,21 +1,7 @@
 import { ClassType } from '@prisma/client'
-import {
-	IsArray,
-	IsDateString,
-	IsEnum,
-	IsOptional,
-	IsString
-} from 'class-validator'
+import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator'
 
 export class ClassDto {
-	@IsOptional()
-	@IsDateString()
-	startTime: string
-
-	@IsOptional()
-	@IsDateString()
-	endTime: string
-
 	@IsOptional()
 	@IsEnum(ClassType)
 	type?: ClassType
@@ -35,6 +21,10 @@ export class ClassDto {
 	@IsOptional()
 	@IsString()
 	disciplineId: string
+
+	@IsOptional()
+	@IsString()
+	subgroupId: string
 
 	@IsArray()
 	@IsString({ each: true })

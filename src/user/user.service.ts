@@ -151,6 +151,14 @@ export class UserService {
 		})
 	}
 
+	async updateAvatarProfile(id: string, avatarPath: string) {
+		return this.prisma.user.update({
+			where: { id },
+			data: { avatarPath },
+			select: { ...returnUserObject }
+		})
+	}
+
 	async delete(id: string) {
 		await this.findById(id)
 

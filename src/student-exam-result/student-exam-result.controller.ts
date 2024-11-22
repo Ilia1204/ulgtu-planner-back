@@ -31,11 +31,11 @@ export class StudentExamResultController {
 	}
 
 	@HttpCode(200)
-	@Get(':semesterId')
+	@Get('by-semester/:semesterId')
 	@Auth()
 	async getExamsResultsByUserAndSemesterId(
 		@CurrentUser('id') id: string,
-		@Param('id') semesterId: string
+		@Param('semesterId') semesterId: string
 	) {
 		return this.studentExamResultService.getByUserAndSemesterId(id, semesterId)
 	}

@@ -3,17 +3,17 @@ import { Prisma } from '@prisma/client'
 export const returnScheduleObject: Prisma.ScheduleSelect = {
 	id: true,
 	createdAt: true,
-	timeStart: true,
-	timeEnd: true,
 	dayWeek: true,
 	weekType: true,
-	group: {
-		select: {
-			name: true
-		}
-	},
 	classes: {
+		orderBy: {
+			pairNumber: 'asc'
+		},
 		select: {
+			roomId: false,
+			teacherId: false,
+			disciplineId: false,
+			pairNumber: true,
 			type: true,
 			discipline: {
 				select: {

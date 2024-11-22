@@ -30,6 +30,12 @@ export const returnStudentExamResultObject: Prisma.StudentExamResultSelect = {
 						}
 					}
 				}
+			},
+			room: {
+				select: {
+					name: true,
+					address: true
+				}
 			}
 		}
 	}

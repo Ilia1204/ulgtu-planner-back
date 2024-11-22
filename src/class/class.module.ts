@@ -5,6 +5,7 @@ import { GroupService } from 'src/group/group.service'
 import { PrismaService } from 'src/prisma.service'
 import { RoomService } from 'src/room/room.service'
 import { ScheduleService } from 'src/schedule/schedule.service'
+import { SubgroupService } from 'src/subgroup/subgroup.service'
 import { ClassController } from './class.controller'
 import { ClassService } from './class.service'
 
@@ -17,7 +18,8 @@ import { ClassService } from './class.service'
 		EmploymentInfoService,
 		RoomService,
 		ScheduleService,
-		GroupService
+		GroupService,
+		SubgroupService
 	]
 })
 export class ClassModule {}

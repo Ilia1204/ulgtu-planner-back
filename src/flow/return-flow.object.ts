@@ -9,6 +9,10 @@ export const returnFlowObject: Prisma.FlowSelect = {
 			name: true
 		}
 	},
-	groups: true,
-	classes: true
+	semesters: {
+		select: {
+			id: true,
+			number: true
+		}
+	}
 }

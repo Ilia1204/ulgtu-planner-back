@@ -14,10 +14,22 @@ export const returnStudentInfoObject: Prisma.StudentInfoSelect = {
 			roles: true
 		}
 	},
-	group: {
+	subgroup: {
 		select: {
-			name: true
+			name: true,
+			group: {
+				select: {
+					name: true,
+					flow: {
+						select: {
+							id: true,
+							name: true,
+							faculty: true
+						}
+					}
+				}
+			}
 		}
 	},
-	StudentExamResult: true
+	studentExamsResults: true
 }

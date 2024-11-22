@@ -4,6 +4,7 @@ import { EmploymentInfoService } from 'src/employment-info/employment-info.servi
 import { PrismaService } from 'src/prisma.service'
 import { RoomService } from 'src/room/room.service'
 import { ScheduleService } from 'src/schedule/schedule.service'
+import { SubgroupService } from 'src/subgroup/subgroup.service'
 import { ClassDto, UpdateClassDto } from './class.dto'
 import { returnClassObject } from './return-class.object'
 
@@ -14,7 +15,8 @@ export class ClassService {
 		private roomService: RoomService,
 		private scheduleService: ScheduleService,
 		private employmentInfoService: EmploymentInfoService,
-		private disciplineService: DisciplineService
+		private disciplineService: DisciplineService,
+		private subgroupService: SubgroupService
 	) {}
 
 	getById(id: string) {
@@ -62,10 +64,15 @@ export class ClassService {
 		const discipline = await this.disciplineService.getById(dto.disciplineId)
 		if (!discipline) throw new NotFoundException('Дисциплина не найдена')
 
+		let subgroupConnect
+		if (dto.subgroupId) {
+			const subgroup = await this.subgroupService.getById(dto.subgroupId)
+			if (!subgroup) throw new NotFoundException('Данная подгруппа не найдена')
+			subgroupConnect = { connect: { id: dto.subgroupId } }
+		}
+
 		return this.prisma.class.create({
 			data: {
-				startTime: dto.startTime,
-				endTime: dto.endTime,
 				type: dto.type,
 				room: {
 					connect: {
@@ -86,7 +93,8 @@ export class ClassService {
 					connect: {
 						id: dto.disciplineId
 					}
-				}
+				},
+				subgroup: subgroupConnect
 			}
 		})
 	}
@@ -95,26 +103,22 @@ export class ClassService {
 		const lesson = await this.getById(id)
 		if (!lesson) throw new NotFoundException('Занятие не найдено')
 
-		const {
-			startTime,
-			endTime,
-			type,
-			roomId,
-			teacherId,
-			disciplineId,
-			scheduleId
-		} = dto
+		const { type, roomId, teacherId, disciplineId, scheduleId, flows } = dto
 
 		return this.prisma.class.update({
 			where: { id },
 			data: {
-				startTime,
-				endTime,
 				type,
 				roomId,
 				teacherId,
 				disciplineId,
-				scheduleId
+				scheduleId,
+				flows: {
+					set: flows.map(flowId => ({ id: flowId })),
+					disconnect: flows
+						?.filter(flowId => !flows.includes(flowId))
+						.map(flowId => ({ id: flowId }))
+				}
 			}
 		})
 	}

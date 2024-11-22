@@ -43,14 +43,102 @@ export class ScheduleService {
 		})
 	}
 
+	getCurrentWeek(startDate: Date): {
+		weekNumber: number
+		weekType: 'even' | 'odd'
+	} {
+		const now = new Date()
+		const diff = Math.floor((+now - +startDate) / (7 * 24 * 60 * 60 * 1000))
+		const weekNumber = diff + 1
+		return {
+			weekNumber,
+			weekType: weekNumber % 2 === 0 ? 'even' : 'odd'
+		}
+	}
+
+	getWeekDates(weekNumber: number, startDate: Date): Date[] {
+		const firstDayOfWeek = new Date(
+			+startDate + (weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
+		)
+		return Array.from({ length: 7 }, (_, i) => {
+			const day = new Date(firstDayOfWeek)
+			day.setDate(day.getDate() + i)
+			return day
+		})
+	}
+
+	async getScheduleForStudent(id: string) {
+		const student = await this.prisma.studentInfo.findUnique({
+			where: { userId: id },
+			include: { subgroup: true }
+		})
+
+		if (!student || !student.subgroup)
+			throw new NotFoundException('Подгруппа не найдена')
+
+		const subgroupId = student.subgroup.id
+		const groupId = student.subgroup.groupId
+
+		const semesterStartDate = new Date('2024-09-03')
+		const { weekNumber, weekType } = this.getCurrentWeek(semesterStartDate)
+
+		return this.prisma.schedule.findMany({
+			where: {
+				weekType: { in: [weekType, weekNumber % 2 === 0 ? 'odd' : 'even'] },
+				classes: {
+					some: {
+						OR: [{ subgroupId }, { subgroupId: null, schedule: { groupId } }]
+					}
+				}
+			},
+			include: {
+				classes: {
+					orderBy: {
+						pairNumber: 'asc'
+					},
+					where: {
+						OR: [
+							{
+								subgroupId
+							},
+							{
+								subgroupId: null,
+								schedule: { groupId }
+							}
+						]
+					},
+					include: {
+						subgroup: {
+							select: { name: true }
+						},
+						teacher: {
+							select: {
+								user: {
+									select: { fullName: true }
+								}
+							}
+						},
+						discipline: {
+							select: { name: true }
+						},
+						room: {
+							select: {
+								name: true,
+								address: true
+							}
+						}
+					}
+				}
+			}
+		})
+	}
+
 	async create(dto: ScheduleDto) {
 		const group = await this.groupService.getById(dto.groupId)
 		if (!group) throw new NotFoundException('Группа не найдена')
 
 		return this.prisma.schedule.create({
 			data: {
-				timeStart: dto.timeStart,
-				timeEnd: dto.timeEnd,
 				dayWeek: dto.dayWeek,
 				weekType: dto.weekType,
 				group: {
@@ -66,13 +154,11 @@ export class ScheduleService {
 		const schedule = await this.getById(id)
 		if (!schedule) throw new NotFoundException('Расписание не найдено')
 
-		const { timeStart, timeEnd, dayWeek, groupId, weekType } = dto
+		const { dayWeek, groupId, weekType } = dto
 
 		return this.prisma.schedule.update({
 			where: { id },
 			data: {
-				timeStart,
-				timeEnd,
 				dayWeek,
 				weekType,
 				groupId

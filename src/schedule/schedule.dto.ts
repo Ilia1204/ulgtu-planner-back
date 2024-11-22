@@ -10,19 +10,15 @@ import {
 export class ScheduleDto {
 	@IsOptional()
 	@IsDateString()
-	timeStart: string
-
-	@IsOptional()
-	@IsDateString()
-	timeEnd: string
+	date: string
 
 	@IsOptional()
 	@IsEnum(DayWeek)
-	dayWeek?: DayWeek
+	dayWeek: DayWeek
 
 	@IsOptional()
 	@IsEnum(WeekType)
-	weekType?: WeekType
+	weekType: WeekType
 
 	@IsOptional()
 	@IsString()

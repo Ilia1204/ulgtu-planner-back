@@ -52,11 +52,11 @@ model StudentInfo {
   user   User   @relation(fields: [userId], references: [id])
   userId String @unique @map("user_id")
 
-  group   Group?  @relation(fields: [groupId], references: [id])
-  groupId String? @map("group_id")
-
   courses             Course[]
   studentExamsResults StudentExamResult[]
+
+  subgroup   Subgroup? @relation(fields: [subgroupId], references: [id])
+  subgroupId String?   @map("subgroup_id")
 
   @@map("student_info")
 }
@@ -74,24 +74,6 @@ model Department {
   teachers    EmploymentInfo[]
 
   @@map("department")
-}
-
-model Flow {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  name    String
-  faculty String? @default("Информационные системы и технологии")
-
-  department   Department @relation(fields: [departmentId], references: [id])
-  departmentId String     @map("department_id")
-
-  groups    Group[]
-  classes   Class[]
-  semesters Semester[]
-
-  @@map("flow")
 }
 
 model EmploymentInfo {
@@ -137,23 +119,6 @@ model Semester {
 
   @@map("semester")
 }
-
-// model Curriculum {
-//   id        String   @id @default(cuid())
-//   createdAt DateTime @default(now()) @map("created_at")
-//   updatedAt DateTime @updatedAt @map("updated_at")
-
-//   courseNumber  Int @default(2) @map("course_number")
-//   lecturesCount Int @default(8) @map("lectures")
-//   labsCount     Int @default(8) @map("labs_count")
-
-//   semester   Semester @relation(fields: [semesterId], references: [id])
-//   semesterId String   @map("semester_id")
-
-//   disciplines Discipline[]
-
-//   @@map("curriculum")
-// }
 
 model StudentExamResult {
   id        String   @id @default(cuid())
@@ -217,10 +182,9 @@ model Schedule {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  dayWeek   DayWeek   @default(monday) @map("day_week")
-  weekType  WeekType  @default(odd) @map("week_type")
-  timeStart DateTime? @default(now()) @map("time_start")
-  timeEnd   DateTime  @default(now()) @map("time_end")
+  date     DateTime @default(now())
+  dayWeek  DayWeek  @default(monday) @map("day_week")
+  weekType WeekType @default(odd) @map("week_type")
 
   group   Group?  @relation(fields: [groupId], references: [id])
   groupId String? @map("group_id")
@@ -235,9 +199,8 @@ model Class {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  startTime DateTime  @default(now()) @map("start_date")
-  endTime   DateTime? @default(now()) @map("end_date")
-  type      ClassType @default(lab)
+  pairNumber Int       @default(1) @map("pair_number")
+  type       ClassType @default(lab)
 
   room   Room   @relation(fields: [roomId], references: [id])
   roomId String @map("room_id")
@@ -255,9 +218,64 @@ model Class {
   attachments Attachment[]
   notes       Note[]
 
-  subgroup String?
+  subgroup   Subgroup? @relation(fields: [subgroupId], references: [id])
+  subgroupId String?   @map("subgroup_id")
 
   @@map("class")
+}
+
+model Flow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name    String
+  faculty String? @default("Информационные системы и технологии")
+
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String     @map("department_id")
+
+  groups    Group[]
+  classes   Class[]
+  semesters Semester[]
+
+  @@map("flow")
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name        String  @unique
+  description String? @default("")
+
+  specialty String? @default("Программная инженерия")
+  profile   String? @default("Искусственный интеллект и предиктивная аналитика")
+
+  flow   Flow?   @relation(fields: [flowId], references: [id])
+  flowId String? @map("flow_id")
+
+  schedule  Schedule[]
+  subgroups Subgroup[]
+
+  @@map("group")
+}
+
+model Subgroup {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  name String
+
+  groupId String @map("group_id")
+  group   Group  @relation(fields: [groupId], references: [id])
+
+  students StudentInfo[]
+  classes  Class[]
+
+  @@map("subgroup")
 }
 
 model Note {
@@ -327,26 +345,6 @@ model Attachment {
   messageId String?  @map("message_id")
 
   @@map("attachment")
-}
-
-model Group {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  name        String  @unique
-  description String? @default("")
-
-  specialty String? @default("Программная инженерия")
-  profile   String? @default("Искусственный интеллект и предиктивная аналитика")
-
-  flow   Flow?   @relation(fields: [flowId], references: [id])
-  flowId String? @map("flow_id")
-
-  studentInfo StudentInfo[]
-  schedule    Schedule[]
-
-  @@map("group")
 }
 
 model ChatGroup {
@@ -461,10 +459,11 @@ enum ExamResult {
   excellent
   good
   satisfactory
-  fail
   credited
+  fail
   not_credited
   absense
+  none
 }
 
 enum MessageStatus {

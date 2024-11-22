@@ -62,6 +62,17 @@ export class AuthController {
 
 	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
+	@Post('validate-password')
+	@Auth()
+	async validatePassword(
+		@CurrentUser('id') id: string,
+		@Body() body: { password: string }
+	) {
+		return this.authService.validatePassword(id, body.password)
+	}
+
+	@UsePipes(new ValidationPipe())
+	@HttpCode(200)
 	@Post('set-recovery-email')
 	@Auth()
 	async setRecoveryEmail(

@@ -43,12 +43,23 @@ export class GroupService {
 		})
 	}
 
-	async create() {
-		return this.prisma.group.create({
-			data: {
-				name: '',
-				description: ''
-			}
+	async create(dto: GroupDto) {
+		return this.prisma.$transaction(async prisma => {
+			const group = await prisma.group.create({
+				data: {
+					name: dto.name,
+					description: dto.description
+				}
+			})
+
+			await prisma.subgroup.createMany({
+				data: [
+					{ name: 'Первая', groupId: group.id },
+					{ name: 'Вторая', groupId: group.id }
+				]
+			})
+
+			return group
 		})
 	}
 

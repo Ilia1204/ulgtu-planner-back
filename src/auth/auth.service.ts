@@ -52,7 +52,17 @@ export class AuthService {
 		return user
 	}
 
-	async setPassword(userId: string, password) {
+	async validatePassword(userId: string, password: string) {
+		const user = await this.userService.getById(userId, { password: true })
+		if (!user) throw new NotFoundException('Пользователь не найден')
+
+		const isValid = await verify(user.password, password)
+		if (!isValid) throw new UnauthorizedException('Неверно введён пароль')
+
+		return { success: isValid }
+	}
+
+	async setPassword(userId: string, password: string) {
 		const user = await this.userService.getById(userId)
 		if (!user) throw new NotFoundException('Пользователь не найден')
 

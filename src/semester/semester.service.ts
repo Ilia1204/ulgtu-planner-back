@@ -90,7 +90,7 @@ export class SemesterService {
 			where: {
 				finalTests: {
 					some: {
-						studentExamResults: {
+						studentExamsResults: {
 							some: {
 								student: {
 									userId
@@ -100,8 +100,11 @@ export class SemesterService {
 					}
 				}
 			},
-			include: {
-				finalTests: true
+			select: {
+				...returnSemesterObject
+			},
+			orderBy: {
+				createdAt: 'asc'
 			}
 		})
 	}

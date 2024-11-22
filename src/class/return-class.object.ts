@@ -3,9 +3,8 @@ import { Prisma } from '@prisma/client'
 export const returnClassObject: Prisma.ClassSelect = {
 	id: true,
 	createdAt: true,
-	startTime: true,
-	endTime: true,
-	subgroup: true,
+
+	pairNumber: true,
 	type: true,
 	room: {
 		select: {

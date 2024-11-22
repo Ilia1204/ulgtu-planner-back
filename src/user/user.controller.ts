@@ -28,9 +28,20 @@ export class UserController {
 	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Put('profile')
-	@Auth()
+	@Auth('admin')
 	async updateProfile(@CurrentUser('id') id: string, @Body() dto: UserDto) {
 		return this.userService.update(id, dto)
+	}
+
+	@UsePipes(new ValidationPipe())
+	@HttpCode(200)
+	@Put('profile/update-avatar')
+	@Auth()
+	async updateAvatarProfile(
+		@CurrentUser('id') id: string,
+		@Body() body: { avatarPath: string }
+	) {
+		return this.userService.updateAvatarProfile(id, body.avatarPath)
 	}
 
 	@Get()

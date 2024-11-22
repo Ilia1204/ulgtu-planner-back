@@ -4,18 +4,16 @@ export const returnGroupObject: Prisma.GroupSelect = {
 	id: true,
 	name: true,
 	createdAt: true,
-	studentInfo: {
-		orderBy: {
-			user: {
-				createdAt: 'asc'
-			}
-		},
+	subgroups: {
 		select: {
-			educationLevel: true,
-			studyForm: true,
-			user: {
+			name: true,
+			students: {
 				select: {
-					fullName: true
+					user: {
+						select: {
+							fullName: true
+						}
+					}
 				}
 			}
 		}
@@ -24,22 +22,17 @@ export const returnGroupObject: Prisma.GroupSelect = {
 		select: {
 			semesters: {
 				select: {
-					number: true,
-					finalTests: {
-						select: {
-							types: true,
-							date: true,
-							studentExamResults: {
-								select: {
-									result: true,
-									type: true
-								}
-							}
-						}
-					}
+					id: true,
+					number: true
 				}
 			}
 		}
 	},
-	schedule: true
+	schedule: {
+		select: {
+			dayWeek: true,
+			weekType: true,
+			classes: true
+		}
+	}
 }

@@ -58,9 +58,7 @@ export class FlowService {
 
 		return this.prisma.flow.update({
 			where: { id },
-			data: {
-				name
-			}
+			data: { name }
 		})
 	}
 

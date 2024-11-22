@@ -30,6 +30,7 @@ export class StudentExamResultService {
 				finalTest: { semesterId }
 			},
 			select: {
+				id: true,
 				result: true,
 				type: true,
 				finalTest: {
@@ -48,10 +49,26 @@ export class StudentExamResultService {
 								name: true
 							}
 						},
+						room: {
+							select: {
+								name: true,
+								address: true
+							}
+						},
 						date: true
 					}
 				}
-			}
+			},
+			orderBy: [
+				{
+					type: 'asc'
+				},
+				{
+					finalTest: {
+						date: 'asc'
+					}
+				}
+			]
 		})
 	}
 

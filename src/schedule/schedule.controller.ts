@@ -12,6 +12,7 @@ import {
 	ValidationPipe
 } from '@nestjs/common'
 import { Auth } from 'src/auth/decorators/auth.decorator'
+import { CurrentUser } from 'src/auth/decorators/user.decorator'
 import { ScheduleDto } from './schedule.dto'
 import { ScheduleService } from './schedule.service'
 
@@ -22,6 +23,13 @@ export class ScheduleController {
 	@Get()
 	async getAll(@Query('searchTerm') searchTerm?: string) {
 		return this.scheduleService.getAll(searchTerm)
+	}
+
+	@HttpCode(200)
+	@Get('get-schedule-for-student')
+	@Auth()
+	async getScheduleForStudent(@CurrentUser('id') id: string) {
+		return this.scheduleService.getScheduleForStudent(id)
 	}
 
 	@UsePipes(new ValidationPipe())

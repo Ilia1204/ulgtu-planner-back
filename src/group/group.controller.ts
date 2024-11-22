@@ -28,8 +28,8 @@ export class GroupController {
 	@HttpCode(200)
 	@Auth('admin')
 	@Post()
-	async createGroup() {
-		return this.groupService.create()
+	async createGroup(@Body() dto: GroupDto) {
+		return this.groupService.create(dto)
 	}
 
 	@UsePipes(new ValidationPipe())
