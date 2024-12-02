@@ -37,7 +37,7 @@ export class DisciplineService {
 		})
 	}
 
-	async create(dto: DisciplineDto) {
+	create(dto: DisciplineDto) {
 		return this.prisma.discipline.create({
 			data: {
 				name: dto.name,
@@ -75,8 +75,8 @@ export class DisciplineService {
 		})
 	}
 
-	async update(id: string, dto: UpdateDisciplineDto) {
-		const discipline = await this.getById(id)
+	update(id: string, dto: UpdateDisciplineDto) {
+		const discipline = this.getById(id)
 		if (!discipline) throw new NotFoundException('Дисциплина не найдена')
 
 		const { name, teachers, finalTests, classes } = dto
@@ -107,8 +107,8 @@ export class DisciplineService {
 		})
 	}
 
-	async delete(id: string) {
-		const discipline = await this.getById(id)
+	delete(id: string) {
+		const discipline = this.getById(id)
 		if (!discipline) throw new NotFoundException('Дисциплина не найдена')
 
 		return this.prisma.discipline.delete({

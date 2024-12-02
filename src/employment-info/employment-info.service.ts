@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
+import { returnEmploymentInfoObject } from './return-employment-info.object'
 
 @Injectable()
 export class EmploymentInfoService {
@@ -7,21 +8,22 @@ export class EmploymentInfoService {
 
 	getById(id: string) {
 		return this.prisma.employmentInfo.findUnique({
-			where: { id }
+			where: { id },
+			select: returnEmploymentInfoObject
 		})
 	}
 
 	getByUserId(id: string) {
 		return this.prisma.employmentInfo.findUnique({
-			where: { userId: id }
+			where: { userId: id },
+			select: returnEmploymentInfoObject
 		})
 	}
 
 	getAll() {
 		return this.prisma.employmentInfo.findMany({
-			orderBy: {
-				createdAt: 'desc'
-			}
+			orderBy: { createdAt: 'desc' },
+			select: returnEmploymentInfoObject
 		})
 	}
 
@@ -29,8 +31,6 @@ export class EmploymentInfoService {
 		return this.prisma.employmentInfo.create({
 			data: {
 				position: '',
-				education: '',
-				workExperience: 0,
 				user: {
 					connect: {
 						id: userId

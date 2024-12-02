@@ -7,13 +7,13 @@ export const returnScheduleObject: Prisma.ScheduleSelect = {
 	weekType: true,
 	classes: {
 		orderBy: {
-			pairNumber: 'asc'
+			pairNumbers: 'asc'
 		},
 		select: {
 			roomId: false,
 			teacherId: false,
 			disciplineId: false,
-			pairNumber: true,
+			pairNumbers: true,
 			type: true,
 			discipline: {
 				select: {

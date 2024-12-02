@@ -1,5 +1,11 @@
 import { ClassType } from '@prisma/client'
-import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator'
+import {
+	IsArray,
+	IsBoolean,
+	IsEnum,
+	IsOptional,
+	IsString
+} from 'class-validator'
 
 export class ClassDto {
 	@IsOptional()
@@ -9,6 +15,10 @@ export class ClassDto {
 	@IsOptional()
 	@IsString()
 	roomId: string
+
+	@IsOptional()
+	@IsArray()
+	pairNumbers: number[]
 
 	@IsOptional()
 	@IsString()
@@ -21,6 +31,14 @@ export class ClassDto {
 	@IsOptional()
 	@IsString()
 	disciplineId: string
+
+	@IsOptional()
+	@IsBoolean()
+	isPublic: boolean
+
+	@IsOptional()
+	@IsString()
+	groupId: string
 
 	@IsOptional()
 	@IsString()

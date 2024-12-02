@@ -57,19 +57,19 @@ export class FinalTestService {
 		})
 	}
 
-	async create(dto: FinalTestDto) {
+	create(dto: FinalTestDto) {
 		if (dto.roomId) {
-			const room = await this.roomService.getById(dto.roomId)
+			const room = this.roomService.getById(dto.roomId)
 			if (!room) throw new NotFoundException('Помещение не найдено')
 		}
 
-		const semester = await this.semesterService.getById(dto.semesterId)
+		const semester = this.semesterService.getById(dto.semesterId)
 		if (!semester) throw new NotFoundException('Семестр не найдено')
 
-		const teacher = await this.employmentInfoService.getById(dto.teacherId)
+		const teacher = this.employmentInfoService.getById(dto.teacherId)
 		if (!teacher) throw new NotFoundException('Преподаватель не найден')
 
-		const discipline = await this.disciplineService.getById(dto.disciplineId)
+		const discipline = this.disciplineService.getById(dto.disciplineId)
 		if (!discipline) throw new NotFoundException('Дисциплина не найдена')
 
 		const data: any = {
@@ -96,8 +96,8 @@ export class FinalTestService {
 		return this.prisma.finalTest.create({ data: { ...data } })
 	}
 
-	async update(id: string, dto: UpdateFinalTestDto) {
-		const finalTest = await this.getById(id)
+	update(id: string, dto: UpdateFinalTestDto) {
+		const finalTest = this.getById(id)
 		if (!finalTest) throw new NotFoundException('Итоговое испытание не найдено')
 
 		const { date, types, roomId, teacherId, disciplineId, semesterId } = dto
@@ -115,8 +115,8 @@ export class FinalTestService {
 		})
 	}
 
-	async delete(id: string) {
-		const finalTest = await this.getById(id)
+	delete(id: string) {
+		const finalTest = this.getById(id)
 		if (!finalTest) throw new NotFoundException('Итоговое испытание не найдено')
 
 		return this.prisma.finalTest.delete({

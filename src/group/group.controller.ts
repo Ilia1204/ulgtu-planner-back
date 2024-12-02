@@ -12,6 +12,7 @@ import {
 	ValidationPipe
 } from '@nestjs/common'
 import { Auth } from 'src/auth/decorators/auth.decorator'
+import { CurrentUser } from 'src/auth/decorators/user.decorator'
 import { GroupDto } from './group.dto'
 import { GroupService } from './group.service'
 
@@ -48,9 +49,12 @@ export class GroupController {
 	}
 
 	@HttpCode(200)
-	@Get(':id')
-	@Auth('admin')
-	async getGroupById(@Param('id') id: string) {
-		return this.groupService.getById(id)
+	@Get(':groupId')
+	@Auth()
+	async getGroupById(
+		@Param('groupId') groupId: string,
+		@CurrentUser('id') id?: string
+	) {
+		return this.groupService.getById(groupId, id)
 	}
 }

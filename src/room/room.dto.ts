@@ -8,6 +8,7 @@ export class RoomDto {
 	@IsOptional()
 	@IsEnum(RoomType)
 	type?: RoomType
+
 	@IsString()
 	address: string
 }

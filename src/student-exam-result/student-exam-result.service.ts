@@ -38,9 +38,7 @@ export class StudentExamResultService {
 						teacher: {
 							select: {
 								user: {
-									select: {
-										fullName: true
-									}
+									select: { fullName: true }
 								}
 							}
 						},
@@ -59,16 +57,7 @@ export class StudentExamResultService {
 					}
 				}
 			},
-			orderBy: [
-				{
-					type: 'asc'
-				},
-				{
-					finalTest: {
-						date: 'asc'
-					}
-				}
-			]
+			orderBy: [{ type: 'asc' }, { finalTest: { date: 'asc' } }]
 		})
 	}
 
@@ -107,11 +96,11 @@ export class StudentExamResultService {
 		})
 	}
 
-	async create(dto: StudentExamResultDto) {
-		const student = await this.studentInfoService.getById(dto.studentId)
+	create(dto: StudentExamResultDto) {
+		const student = this.studentInfoService.getById(dto.studentId)
 		if (!student) throw new NotFoundException('Студент не найден')
 
-		const finalTest = await this.finalTestService.getById(dto.finalTestId)
+		const finalTest = this.finalTestService.getById(dto.finalTestId)
 		if (!finalTest) throw new NotFoundException('Итоговое испытание не найдено')
 
 		return this.prisma.studentExamResult.create({
@@ -132,8 +121,8 @@ export class StudentExamResultService {
 		})
 	}
 
-	async update(id: string, dto: UpdateStudentExamResultDto) {
-		const studentExamResult = await this.getById(id)
+	update(id: string, dto: UpdateStudentExamResultDto) {
+		const studentExamResult = this.getById(id)
 		if (!studentExamResult)
 			throw new NotFoundException('Результат экзамена не найден')
 
@@ -150,8 +139,8 @@ export class StudentExamResultService {
 		})
 	}
 
-	async delete(id: string) {
-		const studentExamResult = await this.getById(id)
+	delete(id: string) {
+		const studentExamResult = this.getById(id)
 		if (!studentExamResult)
 			throw new NotFoundException('Результат экзамена не найден')
 

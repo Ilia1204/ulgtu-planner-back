@@ -12,6 +12,7 @@ import {
 	ValidationPipe
 } from '@nestjs/common'
 import { Auth } from 'src/auth/decorators/auth.decorator'
+import { CurrentUser } from 'src/auth/decorators/user.decorator'
 import { ClassDto, UpdateClassDto } from './class.dto'
 import { ClassService } from './class.service'
 
@@ -48,9 +49,12 @@ export class ClassController {
 	}
 
 	@HttpCode(200)
-	@Get(':id')
-	@Auth('admin')
-	async getClassById(@Param('id') id: string) {
-		return this.classService.getById(id)
+	@Get(':classId')
+	@Auth()
+	async getClassById(
+		@Param('classId') classId: string,
+		@CurrentUser('id') id: string
+	) {
+		return this.classService.getById(classId, id)
 	}
 }

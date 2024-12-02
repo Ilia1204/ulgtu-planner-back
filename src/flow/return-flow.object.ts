@@ -14,5 +14,6 @@ export const returnFlowObject: Prisma.FlowSelect = {
 			id: true,
 			number: true
 		}
-	}
+	},
+	classes: true
 }

@@ -13,23 +13,13 @@ import { Request, Response } from 'express'
 import { AuthService } from './auth.service'
 import { Auth } from './decorators/auth.decorator'
 import { CurrentUser } from './decorators/user.decorator'
-import { AuthDto, LoginDto } from './dto/auth.dto'
+import { AuthDto } from './dto/auth.dto'
 
 @Controller('auth')
+@UsePipes(new ValidationPipe())
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
-	// @UsePipes(new ValidationPipe())
-	// @HttpCode(200)
-	// @Post('login')
-	// async login(@Body() dto: AuthDto, @Res({ passthrough: true }) res: Response) {
-	// 	const { refreshToken, ...response } = await this.authService.login(dto)
-	// 	this.authService.addRefreshTokenToResponse(res, refreshToken)
-
-	// 	return response
-	// }
-
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post('register')
 	async register(
@@ -42,14 +32,12 @@ export class AuthController {
 		return response
 	}
 
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post('login')
-	async login(@Body() dto: LoginDto) {
+	async login(@Body() dto: AuthDto) {
 		return this.authService.initiateLogin(dto)
 	}
 
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post('set-password')
 	@Auth()
@@ -60,7 +48,6 @@ export class AuthController {
 		return this.authService.setPassword(id, body.password)
 	}
 
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post('validate-password')
 	@Auth()
@@ -71,7 +58,6 @@ export class AuthController {
 		return this.authService.validatePassword(id, body.password)
 	}
 
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post('set-recovery-email')
 	@Auth()

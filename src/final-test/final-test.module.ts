@@ -6,6 +6,7 @@ import { RoomService } from 'src/room/room.service'
 import { SemesterService } from 'src/semester/semester.service'
 import { FinalTestController } from './final-test.controller'
 import { FinalTestService } from './final-test.service'
+import { FlowService } from 'src/flow/flow.service'
 
 @Module({
 	controllers: [FinalTestController],
@@ -15,7 +16,8 @@ import { FinalTestService } from './final-test.service'
 		DisciplineService,
 		EmploymentInfoService,
 		RoomService,
-		SemesterService
+		SemesterService,
+		FlowService
 	]
 })
 export class FinalTestModule {}

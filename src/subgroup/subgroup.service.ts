@@ -61,8 +61,8 @@ export class SubgroupService {
 		})
 	}
 
-	async create(dto: SubgroupDto) {
-		const group = await this.groupService.getById(dto.groupId)
+	create(dto: SubgroupDto) {
+		const group = this.groupService.getById(dto.groupId)
 		if (!group) throw new NotFoundException('Группа не найдена')
 
 		return this.prisma.subgroup.create({
@@ -77,8 +77,8 @@ export class SubgroupService {
 		})
 	}
 
-	async update(id: string, dto: SubgroupDto) {
-		const subgroup = await this.getById(id)
+	update(id: string, dto: SubgroupDto) {
+		const subgroup = this.getById(id)
 		if (!subgroup) throw new NotFoundException('Подгруппа не найдена')
 
 		const { name, groupId } = dto
@@ -89,8 +89,8 @@ export class SubgroupService {
 		})
 	}
 
-	async delete(id: string) {
-		const subgroup = await this.getById(id)
+	delete(id: string) {
+		const subgroup = this.getById(id)
 		if (!subgroup) throw new NotFoundException('Подгруппа не найдена')
 
 		return this.prisma.subgroup.delete({

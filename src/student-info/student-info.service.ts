@@ -11,9 +11,7 @@ export class StudentInfoService {
 	getById(id: string) {
 		const studentInfo = this.prisma.studentInfo.findUnique({
 			where: { id },
-			select: {
-				...returnStudentInfoObject
-			}
+			select: returnStudentInfoObject
 		})
 
 		if (!studentInfo)
@@ -31,8 +29,8 @@ export class StudentInfoService {
 		})
 	}
 
-	async getByCreditCardNumber(creditCardNumber: string) {
-		return await this.prisma.studentInfo.findUnique({
+	getByCreditCardNumber(creditCardNumber: string) {
+		return this.prisma.studentInfo.findUnique({
 			where: { creditCardNumber },
 			select: { ...returnStudentInfoObject }
 		})
@@ -47,15 +45,12 @@ export class StudentInfoService {
 		})
 	}
 
-	async create(userId: string) {
+	create(userId: string) {
 		const creditCardNumber = generateCreditCardNumber()
 
 		return this.prisma.studentInfo.create({
 			data: {
-				studyForm: 'full_time',
 				creditCardNumber,
-				educationLevel: 'bachelor',
-				fundingSource: 'budget',
 				user: {
 					connect: {
 						id: userId
@@ -70,11 +65,7 @@ export class StudentInfoService {
 
 		return this.prisma.studentInfo.update({
 			where: { id },
-			data: {
-				studyForm: dto.studyForm,
-				educationLevel: dto.educationLevel,
-				fundingSource: dto.findingSource
-			}
+			data: { creditCardNumber: dto.creditCardNumber }
 		})
 	}
 }

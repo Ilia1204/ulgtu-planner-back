@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { FlowService } from 'src/flow/flow.service'
 import { PrismaService } from 'src/prisma.service'
 import { returnSemesterObject } from './return-semester.object'
 import { SemesterDto, UpdateSemesterDto } from './semester.dto'
 
 @Injectable()
 export class SemesterService {
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private flowService: FlowService
+	) {}
 
 	getById(id: string) {
 		return this.prisma.semester.findUnique({
@@ -57,60 +61,73 @@ export class SemesterService {
 		})
 	}
 
-	async create(dto: SemesterDto) {
+	create(dto: SemesterDto) {
+		let flowConnect
+		if (dto.flowId) {
+			const flow = this.flowService.getById(dto.flowId)
+			if (!flow) throw new NotFoundException('Поток не найден')
+
+			flowConnect = { connect: { id: dto.flowId } }
+		}
+
 		return this.prisma.semester.create({
 			data: {
 				number: dto.number,
-				flow: {
-					connect: {
-						id: dto.flowId
-					}
-				}
+				flow: flowConnect,
+				...(dto.finalTests
+					? {
+							finalTests: {
+								connect: dto.finalTests.map(finalTestId => ({
+									id: finalTestId
+								}))
+							}
+					  }
+					: {})
 			}
 		})
 	}
 
-	async update(id: string, dto: UpdateSemesterDto) {
-		const semester = await this.getById(id)
+	update(id: string, dto: UpdateSemesterDto) {
+		const semester = this.getById(id)
 		if (!semester) throw new NotFoundException('Семестр не найден')
 
-		const { number, flowId } = dto
+		const { number, flowId, finalTests } = dto
 
 		return this.prisma.semester.update({
 			where: { id },
 			data: {
 				number,
-				flowId
+				flowId,
+				finalTests: {
+					set: finalTests.map(finalTestId => ({ id: finalTestId })),
+					disconnect: finalTests
+						?.filter(finalTestId => !finalTests.includes(finalTestId))
+						.map(finalTestId => ({ id: finalTestId }))
+				}
 			}
 		})
 	}
 
-	async getSemestersByUserId(userId: string) {
+	getSemestersByUserId(userId: string) {
 		return this.prisma.semester.findMany({
 			where: {
 				finalTests: {
 					some: {
 						studentExamsResults: {
 							some: {
-								student: {
-									userId
-								}
+								student: { userId }
 							}
 						}
 					}
 				}
 			},
-			select: {
-				...returnSemesterObject
-			},
-			orderBy: {
-				createdAt: 'asc'
-			}
+			select: { ...returnSemesterObject },
+			orderBy: { createdAt: 'asc' }
 		})
 	}
 
-	async delete(id: string) {
-		const semester = await this.getById(id)
+	delete(id: string) {
+		const semester = this.getById(id)
 		if (!semester) throw new NotFoundException('Семестр не найден')
 
 		return this.prisma.semester.delete({

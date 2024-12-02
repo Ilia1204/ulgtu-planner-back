@@ -19,7 +19,7 @@ model User {
   username    String  @unique
   avatarPath  String? @map("avatar_path")
   password    String
-  phoneNumber String? @default("") @map("phone_number")
+  phoneNumber String? @map("phone_number")
 
   birthDate         DateTime @default(now()) @map("birth_date")
   libraryCardNumber String   @unique @map("library_card_number")
@@ -41,22 +41,18 @@ model StudentInfo {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  studyStartDate DateTime  @default(now()) @map("study_start_date")
-  studyEndDate   DateTime? @default(now()) @map("study_end_date")
-
-  studyForm        StudyForm?      @default(full_time) @map("study_form")
-  educationLevel   EducationLevel? @default(bachelor) @map("education_level")
-  creditCardNumber String?         @unique @map("credit_card_number")
-  fundingSource    FundingSource?  @default(budget) @map("funding_source")
+  creditCardNumber String? @unique @map("credit_card_number")
 
   user   User   @relation(fields: [userId], references: [id])
   userId String @unique @map("user_id")
 
-  courses             Course[]
-  studentExamsResults StudentExamResult[]
-
   subgroup   Subgroup? @relation(fields: [subgroupId], references: [id])
   subgroupId String?   @map("subgroup_id")
+
+  group   Group?  @relation(fields: [groupId], references: [id])
+  groupId String? @map("group_id")
+
+  studentExamsResults StudentExamResult[]
 
   @@map("student_info")
 }
@@ -68,6 +64,7 @@ model Department {
 
   name        String  @unique
   description String?
+  isPublic    Boolean @default(true) @map("is_public")
 
   flows       Flow[]
   disciplines Discipline[]
@@ -81,15 +78,7 @@ model EmploymentInfo {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  description     String?
-  position        String
-  education       String?  @default("")
-  academicTitles  String[] @default([]) @map("academic_titles")
-  academicDegrees String[] @default([]) @map("academic_degrees")
-
-  workExperience Int       @default(0) @map("work_experience")
-  startDate      DateTime? @map("start_date")
-  endDate        DateTime? @map("end_date")
+  position String
 
   user   User   @relation(fields: [userId], references: [id])
   userId String @unique @map("user_id")
@@ -97,7 +86,6 @@ model EmploymentInfo {
   department   Department? @relation(fields: [departmentId], references: [id])
   departmentId String?     @map("department_id")
 
-  courses     Course[]
   disciplines Discipline[]
   classes     Class[]
   finalTests  FinalTest[]
@@ -110,7 +98,8 @@ model Semester {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  number String @default("Первый")
+  number   String  @default("Первый")
+  isPublic Boolean @default(true) @map("is_public")
 
   flow   Flow?   @relation(fields: [flowId], references: [id])
   flowId String? @map("flow_id")
@@ -127,6 +116,8 @@ model StudentExamResult {
 
   result ExamResult @default(good)
   type   ExamType   @default(exam)
+
+  isPublic Boolean @default(true) @map("is_public")
 
   student   StudentInfo @relation(fields: [studentId], references: [id])
   studentId String      @map("student_id")
@@ -145,6 +136,8 @@ model FinalTest {
   date  DateTime?
   types ExamType[] @default([exam])
 
+  isPublic Boolean @default(true) @map("is_public")
+
   discipline   Discipline @relation(fields: [disciplineId], references: [id])
   disciplineId String     @map("discipline_id")
 
@@ -162,21 +155,6 @@ model FinalTest {
   @@map("final_test")
 }
 
-model Course {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  name        String  @unique
-  description String? @default("")
-
-  teachers   EmploymentInfo[]
-  students   StudentInfo[]
-  attachment Attachment[]
-
-  @@map("course")
-}
-
 model Schedule {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
@@ -186,8 +164,7 @@ model Schedule {
   dayWeek  DayWeek  @default(monday) @map("day_week")
   weekType WeekType @default(odd) @map("week_type")
 
-  group   Group?  @relation(fields: [groupId], references: [id])
-  groupId String? @map("group_id")
+  isPublic Boolean @default(true) @map("is_public")
 
   classes Class[]
 
@@ -199,8 +176,10 @@ model Class {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  pairNumber Int       @default(1) @map("pair_number")
-  type       ClassType @default(lab)
+  type        ClassType @default(lab)
+  pairNumbers Int[]     @default([1]) @map("pair_numbers")
+
+  isPublic Boolean @default(true) @map("is_public")
 
   room   Room   @relation(fields: [roomId], references: [id])
   roomId String @map("room_id")
@@ -214,12 +193,15 @@ model Class {
   discipline   Discipline @relation(fields: [disciplineId], references: [id])
   disciplineId String     @map("discipline_id")
 
-  flows       Flow[]
-  attachments Attachment[]
-  notes       Note[]
+  group   Group?  @relation(fields: [groupId], references: [id])
+  groupId String? @map("group_id")
 
   subgroup   Subgroup? @relation(fields: [subgroupId], references: [id])
   subgroupId String?   @map("subgroup_id")
+
+  flows       Flow[]
+  attachments Attachment[]
+  notes       Note[]
 
   @@map("class")
 }
@@ -231,6 +213,8 @@ model Flow {
 
   name    String
   faculty String? @default("Информационные системы и технологии")
+
+  isPublic Boolean @default(true) @map("is_public")
 
   department   Department @relation(fields: [departmentId], references: [id])
   departmentId String     @map("department_id")
@@ -247,17 +231,26 @@ model Group {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  name        String  @unique
-  description String? @default("")
+  studyStartDate DateTime  @default(now()) @map("study_start_date")
+  studyEndDate   DateTime? @default(now()) @map("study_end_date")
+
+  name         String @unique
+  courseNumber Int    @default(2) @map("course_number")
+
+  studyForm      StudyForm?      @default(full_time) @map("study_form")
+  educationLevel EducationLevel? @default(bachelor) @map("education_level")
 
   specialty String? @default("Программная инженерия")
   profile   String? @default("Искусственный интеллект и предиктивная аналитика")
 
+  isPublic Boolean @default(true) @map("is_public")
+
   flow   Flow?   @relation(fields: [flowId], references: [id])
   flowId String? @map("flow_id")
 
-  schedule  Schedule[]
   subgroups Subgroup[]
+  students  StudentInfo[]
+  classes   Class[]
 
   @@map("group")
 }
@@ -268,6 +261,8 @@ model Subgroup {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   name String
+
+  isPublic Boolean @default(true) @map("is_public")
 
   groupId String @map("group_id")
   group   Group  @relation(fields: [groupId], references: [id])
@@ -302,6 +297,8 @@ model Discipline {
 
   name String @unique
 
+  isPublic Boolean @default(true) @map("is_public")
+
   department   Department? @relation(fields: [departmentId], references: [id])
   departmentId String?     @map("department_id")
 
@@ -321,6 +318,8 @@ model Room {
   type    RoomType @default(cabinet)
   address String
 
+  isPublic Boolean @default(true) @map("is_public")
+
   classes    Class[]
   finalTests FinalTest[]
 
@@ -335,11 +334,10 @@ model Attachment {
   filename String
   url      String
 
+  isPublic Boolean @default(true) @map("is_public")
+
   class   Class?  @relation(fields: [classId], references: [id])
   classId String? @map("class_id")
-
-  course   Course? @relation(fields: [courseId], references: [id])
-  courseId String? @map("course_id")
 
   message   Message? @relation(fields: [messageId], references: [id])
   messageId String?  @map("message_id")
@@ -353,7 +351,7 @@ model ChatGroup {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   name        String
-  description String? @default("")
+  description String?
 
   members  User[]
   messages Message[]
@@ -395,14 +393,6 @@ enum StudyForm {
   distance
   mixed
   externship
-}
-
-enum FundingSource {
-  budget
-  paid
-  targeted_training
-  grant
-  scholarship
 }
 
 enum DayWeek {

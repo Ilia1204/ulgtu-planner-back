@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator'
 
 export class FlowDto {
 	@IsString()
@@ -6,6 +6,10 @@ export class FlowDto {
 
 	@IsString()
 	departmentId: string
+
+	@IsOptional()
+	@IsBoolean()
+	isPublic: boolean
 
 	@IsArray()
 	@IsString({ each: true })

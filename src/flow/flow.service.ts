@@ -37,33 +37,68 @@ export class FlowService {
 		})
 	}
 
-	async create(dto: FlowDto) {
+	create(dto: FlowDto) {
 		return this.prisma.flow.create({
 			data: {
 				name: dto.name,
+				isPublic: dto.isPublic,
 				department: {
 					connect: {
 						id: dto.departmentId
 					}
+				},
+				...(dto.groups
+					? {
+							groups: {
+								connect: dto.groups.map(groupId => ({
+									id: groupId
+								}))
+							}
+					  }
+					: {}),
+				...(dto.classes
+					? {
+							classes: {
+								connect: dto.classes.map(classId => ({
+									id: classId
+								}))
+							}
+					  }
+					: {})
+			}
+		})
+	}
+
+	update(id: string, dto: UpdateFlowDto) {
+		const flow = this.getById(id)
+		if (!flow) throw new NotFoundException('Поток не найден')
+
+		const { name, departmentId, isPublic, groups, classes } = dto
+
+		return this.prisma.flow.update({
+			where: { id },
+			data: {
+				name,
+				departmentId,
+				isPublic,
+				groups: {
+					set: groups.map(groupId => ({ id: groupId })),
+					disconnect: groups
+						?.filter(groupId => !groups.includes(groupId))
+						.map(groupId => ({ id: groupId }))
+				},
+				classes: {
+					set: classes.map(classId => ({ id: classId })),
+					disconnect: classes
+						?.filter(classId => !classes.includes(classId))
+						.map(classId => ({ id: classId }))
 				}
 			}
 		})
 	}
 
-	async update(id: string, dto: UpdateFlowDto) {
-		const flow = await this.getById(id)
-		if (!flow) throw new NotFoundException('Поток не найден')
-
-		const { name } = dto
-
-		return this.prisma.flow.update({
-			where: { id },
-			data: { name }
-		})
-	}
-
-	async delete(id: string) {
-		const flow = await this.getById(id)
+	delete(id: string) {
+		const flow = this.getById(id)
 		if (!flow) throw new NotFoundException('Поток не найден')
 
 		return this.prisma.flow.delete({

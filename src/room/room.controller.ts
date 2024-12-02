@@ -28,8 +28,8 @@ export class RoomController {
 	@HttpCode(200)
 	@Auth('admin')
 	@Post()
-	async createRoom() {
-		return this.roomService.create()
+	async createRoom(@Body() dto: RoomDto) {
+		return this.roomService.create(dto)
 	}
 
 	@UsePipes(new ValidationPipe())
@@ -49,7 +49,7 @@ export class RoomController {
 
 	@HttpCode(200)
 	@Get(':id')
-	@Auth('admin')
+	@Auth()
 	async getRoomById(@Param('id') id: string) {
 		return this.roomService.getById(id)
 	}

@@ -2,10 +2,6 @@ import { Prisma } from '@prisma/client'
 
 export const returnStudentInfoObject: Prisma.StudentInfoSelect = {
 	id: true,
-	studyForm: true,
-	educationLevel: true,
-	fundingSource: true,
-	courses: true,
 	userId: true,
 	creditCardNumber: true,
 	user: {
@@ -14,21 +10,24 @@ export const returnStudentInfoObject: Prisma.StudentInfoSelect = {
 			roles: true
 		}
 	},
-	subgroup: {
+	group: {
 		select: {
+			id: true,
+			educationLevel: true,
+			studyForm: true,
 			name: true,
-			group: {
+			flow: {
 				select: {
+					id: true,
 					name: true,
-					flow: {
-						select: {
-							id: true,
-							name: true,
-							faculty: true
-						}
-					}
+					faculty: true
 				}
 			}
+		}
+	},
+	subgroup: {
+		select: {
+			name: true
 		}
 	},
 	studentExamsResults: true

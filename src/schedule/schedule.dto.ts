@@ -1,6 +1,7 @@
 import { DayWeek, WeekType } from '@prisma/client'
 import {
 	IsArray,
+	IsBoolean,
 	IsDateString,
 	IsEnum,
 	IsOptional,
@@ -17,12 +18,12 @@ export class ScheduleDto {
 	dayWeek: DayWeek
 
 	@IsOptional()
-	@IsEnum(WeekType)
-	weekType: WeekType
+	@IsBoolean()
+	isPublic: boolean
 
 	@IsOptional()
-	@IsString()
-	groupId: string
+	@IsEnum(WeekType)
+	weekType: WeekType
 
 	@IsArray()
 	@IsString({ each: true })

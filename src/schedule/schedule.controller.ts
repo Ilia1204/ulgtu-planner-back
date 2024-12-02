@@ -7,7 +7,6 @@ import {
 	Param,
 	Post,
 	Put,
-	Query,
 	UsePipes,
 	ValidationPipe
 } from '@nestjs/common'
@@ -21,8 +20,8 @@ export class ScheduleController {
 	constructor(private readonly scheduleService: ScheduleService) {}
 
 	@Get()
-	async getAll(@Query('searchTerm') searchTerm?: string) {
-		return this.scheduleService.getAll(searchTerm)
+	async getAll() {
+		return this.scheduleService.getAll()
 	}
 
 	@HttpCode(200)

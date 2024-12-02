@@ -22,12 +22,13 @@ export class AuthDto {
 
 	@IsOptional()
 	@IsString()
-	creditCardNumber?: string
+	creditCardNumber: string
 
 	@IsOptional()
 	@IsString()
 	libraryCardNumber: string
 
+	@IsOptional()
 	@MinLength(8, {
 		message: 'Пароль должен быть не менее 8 символов!'
 	})
@@ -37,18 +38,4 @@ export class AuthDto {
 	@IsEnum(UserRole, { each: true })
 	@IsOptional()
 	roles: UserRole[]
-}
-
-export class LoginDto {
-	@IsOptional()
-	@IsEmail()
-	email: string
-
-	@IsOptional()
-	@IsString()
-	username: string
-
-	@IsOptional()
-	@IsString()
-	creditCardNumber: string
 }

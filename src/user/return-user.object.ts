@@ -11,6 +11,7 @@ export const returnUserObject: Prisma.UserSelect = {
 	roles: true,
 	avatarPath: true,
 	phoneNumber: true,
+	recoveryEmail: true,
 	birthDate: true,
 	libraryCardNumber: true,
 	studentInfo: {
@@ -18,7 +19,17 @@ export const returnUserObject: Prisma.UserSelect = {
 			...returnStudentInfoObject
 		}
 	},
-	employmentInfo: true,
+	employmentInfo: {
+		select: {
+			department: {
+				select: {
+					name: true
+				}
+			},
+			position: true,
+			departmentId: true
+		}
+	},
 	chatGroups: true,
 	messages: true
 }

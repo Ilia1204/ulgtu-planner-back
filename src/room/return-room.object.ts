@@ -6,6 +6,59 @@ export const returnRoomObject: Prisma.RoomSelect = {
 	name: true,
 	type: true,
 	address: true,
-	classes: true,
-	finalTests: true
+	classes: {
+		select: {
+			group: {
+				select: {
+					name: true
+				}
+			},
+			teacher: {
+				select: {
+					user: {
+						select: {
+							fullName: true
+						}
+					}
+				}
+			},
+			flows: {
+				select: {
+					name: true
+				}
+			},
+			subgroup: {
+				select: {
+					name: true
+				}
+			},
+			room: {
+				select: {
+					name: true,
+					address: true
+				}
+			},
+			pairNumbers: true,
+			type: true,
+			schedule: {
+				select: {
+					dayWeek: true,
+					date: true
+				}
+			},
+			discipline: {
+				select: {
+					name: true
+				}
+			}
+		},
+		orderBy: [
+			{
+				schedule: {
+					date: 'asc'
+				}
+			},
+			{ pairNumbers: 'asc' }
+		]
+	}
 }
