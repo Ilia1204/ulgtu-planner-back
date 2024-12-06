@@ -113,11 +113,20 @@ export class SemesterService {
 			where: {
 				finalTests: {
 					some: {
-						studentExamsResults: {
-							some: {
-								student: { userId }
+						OR: [
+							{
+								studentExamsResults: {
+									some: {
+										student: { userId }
+									}
+								}
+							},
+							{
+								studentExamsResults: {
+									none: {}
+								}
 							}
-						}
+						]
 					}
 				}
 			},

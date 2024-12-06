@@ -5,6 +5,7 @@ export const returnClassObject: Prisma.ClassSelect = {
 	createdAt: true,
 	pairNumbers: true,
 	type: true,
+	courseNumber: true,
 	updatedAt: true,
 	room: {
 		select: {

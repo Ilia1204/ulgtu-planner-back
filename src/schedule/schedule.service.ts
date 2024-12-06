@@ -35,6 +35,7 @@ export class ScheduleService {
 		}
 	}
 
+	@Cron('0 0 * * 1')
 	async updateScheduleDates() {
 		const semesterStartDate = new Date('2024-09-03')
 		const { weekNumber, weekType } = this.getCurrentWeek(semesterStartDate)
@@ -58,86 +59,158 @@ export class ScheduleService {
 		return { success: true, message: 'Расписание обновлено!' }
 	}
 
-	@Cron('0 0 * * 1')
-	async handleCron() {
-		await this.updateScheduleDates()
-	}
-
-	async getScheduleForStudent(id: string) {
-		const student = await this.prisma.studentInfo.findUnique({
-			where: { userId: id },
-			include: {
-				group: {
-					select: {
-						id: true,
-						flowId: true
+	async getScheduleForUser(id: string) {
+		const user = await this.prisma.user.findUnique({
+			where: { id },
+			select: {
+				roles: true,
+				studentInfo: {
+					include: {
+						group: {
+							select: {
+								id: true,
+								flowId: true
+							}
+						}
 					}
-				}
+				},
+				employmentInfo: true
 			}
 		})
 
-		if (!student) throw new NotFoundException('Подгруппа не найдена')
-
-		const groupId = student?.group?.id
-		const flowId = student?.group?.flowId
-
-		if (!groupId || !flowId)
-			throw new NotFoundException('Вы не прикреплены к группе или потоку')
+		if (!user) throw new NotFoundException('Пользователь не найден')
 
 		const semesterStartDate = new Date('2024-09-03')
 		const { weekNumber, weekType } = this.getCurrentWeek(semesterStartDate)
 
-		return this.prisma.class.findMany({
-			where: {
-				OR: [{ groupId }, { flows: { some: { id: flowId } } }],
-				schedule: {
-					weekType: { in: [weekType, weekNumber % 2 === 0 ? 'odd' : 'even'] }
-				}
-			},
-			orderBy: [
-				{ schedule: { date: 'asc' } },
-				{ pairNumbers: 'asc' },
-				{ subgroup: { name: 'asc' } }
-			],
-			select: {
-				id: true,
-				type: true,
-				pairNumbers: true,
-				schedule: {
-					select: {
-						dayWeek: true,
-						weekType: true,
-						date: true,
-						classes: { select: { pairNumbers: true } }
+		const schedules = []
+
+		if (user.studentInfo) {
+			const groupId = user.studentInfo.group?.id
+			const flowId = user.studentInfo.group?.flowId
+
+			if (!groupId || !flowId)
+				throw new NotFoundException('Вы не прикреплены к группе или потоку')
+
+			const classes = await this.prisma.class.findMany({
+				where: {
+					OR: [{ groupId }, { flows: { some: { id: flowId } } }],
+					schedule: {
+						weekType: { in: [weekType, weekNumber % 2 === 0 ? 'odd' : 'even'] }
 					}
 				},
-				subgroup: {
-					select: { name: true }
-				},
-				teacher: {
-					select: {
-						user: {
-							select: { fullName: true }
+				orderBy: [
+					{ schedule: { weekType: weekType === 'even' ? 'desc' : 'asc' } },
+					{ schedule: { date: 'asc' } },
+					{ pairNumbers: 'asc' },
+					{ subgroup: { name: 'asc' } }
+				],
+				select: {
+					id: true,
+					type: true,
+					pairNumbers: true,
+					schedule: {
+						select: {
+							dayWeek: true,
+							weekType: true,
+							date: true,
+							classes: { select: { pairNumbers: true } }
+						}
+					},
+					subgroup: {
+						select: { name: true }
+					},
+					teacher: {
+						select: {
+							user: {
+								select: { fullName: true }
+							}
+						}
+					},
+					discipline: {
+						select: { name: true }
+					},
+					room: {
+						select: {
+							name: true,
+							address: true
+						}
+					},
+					notes: {
+						where: {
+							OR: [{ isPrivate: false }, { isPrivate: true, userId: id }]
+						},
+						select: returnNoteObject,
+						orderBy: {
+							isPrivate: 'desc'
 						}
 					}
-				},
-				discipline: {
-					select: { name: true }
-				},
-				room: {
-					select: {
-						name: true,
-						address: true
+				}
+			})
+			schedules.push(...classes)
+		}
+
+		if (user.employmentInfo) {
+			const classes = await this.prisma.class.findMany({
+				where: {
+					teacher: {
+						userId: id
 					}
 				},
-				notes: {
-					where: {
-						OR: [{ isPrivate: false }, { isPrivate: true, userId: id }]
+				orderBy: [
+					{ schedule: { weekType: weekType === 'even' ? 'desc' : 'asc' } },
+					{ schedule: { date: 'asc' } },
+					{ pairNumbers: 'asc' },
+					{ subgroup: { name: 'asc' } }
+				],
+				select: {
+					id: true,
+					type: true,
+					pairNumbers: true,
+					schedule: {
+						select: {
+							dayWeek: true,
+							weekType: true,
+							date: true,
+							classes: { select: { pairNumbers: true } }
+						}
 					},
-					select: returnNoteObject
+					teacher: {
+						select: {
+							user: {
+								select: {
+									fullName: true
+								}
+							}
+						}
+					},
+					subgroup: {
+						select: { name: true }
+					},
+					discipline: {
+						select: { name: true }
+					},
+					room: {
+						select: {
+							name: true,
+							address: true
+						}
+					},
+					notes: {
+						where: {
+							OR: [{ isPrivate: false }, { isPrivate: true, userId: id }]
+						},
+						select: returnNoteObject,
+						orderBy: {
+							isPrivate: 'desc'
+						}
+					}
 				}
-			}
-		})
+			})
+			schedules.push(...classes)
+		}
+
+		return schedules
 	}
 
 	create(dto: ScheduleDto) {
@@ -158,11 +231,7 @@ export class ScheduleService {
 
 		return this.prisma.schedule.update({
 			where: { id },
-			data: {
-				dayWeek,
-				weekType,
-				isPublic
-			}
+			data: { dayWeek, weekType, isPublic }
 		})
 	}
 

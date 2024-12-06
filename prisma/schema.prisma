@@ -176,8 +176,9 @@ model Class {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  type        ClassType @default(lab)
-  pairNumbers Int[]     @default([1]) @map("pair_numbers")
+  type         ClassType @default(lab)
+  pairNumbers  Int[]     @default([1]) @map("pair_numbers")
+  courseNumber Int?      @map("course_number")
 
   isPublic Boolean @default(true) @map("is_public")
 

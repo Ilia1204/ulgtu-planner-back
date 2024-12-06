@@ -32,6 +32,9 @@ export class ClassService {
 						classId: id,
 						OR: [{ isPrivate: false }, { isPrivate: true, userId }]
 					},
+					orderBy: {
+						isPrivate: 'asc'
+					},
 					select: returnNoteObject
 				}
 			}

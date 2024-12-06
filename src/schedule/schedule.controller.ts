@@ -28,7 +28,7 @@ export class ScheduleController {
 	@Get('get-schedule-for-student')
 	@Auth()
 	async getScheduleForStudent(@CurrentUser('id') id: string) {
-		return this.scheduleService.getScheduleForStudent(id)
+		return this.scheduleService.getScheduleForUser(id)
 	}
 
 	@UsePipes(new ValidationPipe())

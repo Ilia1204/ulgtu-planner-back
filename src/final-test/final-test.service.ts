@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { ExamResult } from '@prisma/client'
 import { DisciplineService } from 'src/discipline/discipline.service'
 import { EmploymentInfoService } from 'src/employment-info/employment-info.service'
 import { PrismaService } from 'src/prisma.service'
@@ -57,7 +58,7 @@ export class FinalTestService {
 		})
 	}
 
-	create(dto: FinalTestDto) {
+	async create(dto: FinalTestDto) {
 		if (dto.roomId) {
 			const room = this.roomService.getById(dto.roomId)
 			if (!room) throw new NotFoundException('Помещение не найдено')
@@ -93,7 +94,33 @@ export class FinalTestService {
 		}
 
 		if (dto.roomId) data.room = { connect: { id: dto.roomId } }
-		return this.prisma.finalTest.create({ data: { ...data } })
+		const finalTest = await this.prisma.finalTest.create({ data: { ...data } })
+
+		const flowId = await (await semester).flowId
+		const groupsInFlow = await this.prisma.group.findMany({
+			where: { flowId },
+			include: { students: true }
+		})
+
+		const studentIds = groupsInFlow.flatMap(group =>
+			group.students.map(student => student.id)
+		)
+
+		const studentExamResults = studentIds.flatMap(studentId =>
+			dto.types.map(type => ({
+				studentId,
+				finalTestId: finalTest.id,
+				result: ExamResult.none,
+				type,
+				isPublic: true
+			}))
+		)
+
+		await this.prisma.studentExamResult.createMany({
+			data: studentExamResults
+		})
+
+		return finalTest
 	}
 
 	update(id: string, dto: UpdateFinalTestDto) {

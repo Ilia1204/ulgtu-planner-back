@@ -11,16 +11,35 @@ export class GroupService {
 	async getById(groupId: string, userId?: string) {
 		const group = await this.prisma.group.findUnique({
 			where: { id: groupId },
-			select: { flowId: true, name: true, flow: { select: { faculty: true } } }
+			select: {
+				flowId: true,
+				name: true,
+				flow: { select: { faculty: true } },
+				courseNumber: true
+			}
 		})
-
 		if (!group) throw new NotFoundException('Группа не найдена')
 
 		const flowId = group.flowId
 
+		const flows = await this.prisma.class.findMany({
+			where: { groupId },
+			select: {
+				flows: {
+					select: {
+						groups: {
+							select: { courseNumber: true }
+						}
+					}
+				}
+			}
+		})
+
+		const courseNumber = flows?.[0]?.flows?.[0]?.groups?.[0]?.courseNumber || 2
+
 		const classes = await this.prisma.class.findMany({
 			where: {
-				OR: [{ groupId }, { flows: { some: { id: flowId } } }]
+				OR: [{ groupId }, { flows: { some: { id: flowId } }, courseNumber }]
 			},
 			include: {
 				subgroup: { select: { name: true } },
@@ -33,95 +52,30 @@ export class GroupService {
 				room: {
 					select: { name: true, address: true }
 				},
-				flows: true,
+				flows: {
+					select: {
+						name: true,
+						groups: {
+							select: {
+								name: true,
+								courseNumber: true
+							}
+						}
+					}
+				},
 				schedule: {
 					select: {
 						dayWeek: true,
 						weekType: true,
-						date: true,
-						classes: { select: { pairNumbers: true } }
+						date: true
 					}
-				},
-				notes: {
-					where: {
-						OR: [{ isPrivate: false }, { isPrivate: true, userId }]
-					},
-					select: { id: true }
 				}
 			},
 			orderBy: [{ schedule: { date: 'asc' } }, { pairNumbers: 'asc' }]
 		})
 
-		return {
-			...group,
-			classes
-		}
+		return { ...group, classes }
 	}
-
-	// async getById(groupId: string, userId?: string) {
-	// 	const group = await this.prisma.group.findUnique({
-	// 		where: { id: groupId },
-	// 		select: {
-	// 			flow: { select: { faculty: true, id: true } },
-	// 			name: true,
-	// 			flowId: true
-	// 		}
-	// 	})
-	// 	if (!group) throw new NotFoundException('Группа не найдена')
-
-	// 	const flowId = group?.flowId
-	// 	if (!flowId) throw new NotFoundException('Нет прикрепления группы к потоку')
-
-	// 	const classes = await this.prisma.class.findMany({
-	// 		where: {
-	// 			OR: [{ groupId }, { flows: { some: { id: flowId } } }]
-	// 		},
-	// 		select: {
-	// 			id: true,
-	// 			pairNumbers: true,
-	// 			type: true,
-	// 			subgroup: {
-	// 				select: { name: true }
-	// 			},
-	// 			teacher: {
-	// 				select: {
-	// 					user: { select: { fullName: true } }
-	// 				}
-	// 			},
-	// 			discipline: { select: { name: true } },
-	// 			room: {
-	// 				select: { name: true, address: true }
-	// 			},
-	// 			flows: true,
-	// 			schedule: {
-	// 				select: {
-	// 					dayWeek: true,
-	// 					weekType: true,
-	// 					date: true,
-	// 					classes: { select: { pairNumbers: true } }
-	// 				}
-	// 			},
-	// 			notes: {
-	// 				where: {
-	// 					OR: [{ isPrivate: false }, { isPrivate: true, userId }]
-	// 				},
-	// 				select: { id: true }
-	// 			}
-	// 		},
-	// 		orderBy: [
-	// 			{ schedule: { date: 'asc' } },
-	// 			{ pairNumbers: 'asc' },
-	// 			{ subgroup: { name: 'asc' } }
-	// 		]
-	// 	})
-
-	// 	return {
-	// 		id: groupId,
-	// 		name: group.name,
-	// 		flow: { faculty: group.flow.faculty },
-	// 		classes
-	// 	}
-	// }
 
 	async getAll(searchTerm?: string) {
 		if (searchTerm) return this.search(searchTerm)

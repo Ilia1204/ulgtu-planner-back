@@ -46,24 +46,17 @@ export class NoteController {
 
 	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
-	@Put(':noteId')
+	@Put(':id')
 	@Auth()
-	async updateNote(
-		@Param('noteId') noteId: string,
-		@Body() dto: UpdateNoteDto,
-		@CurrentUser('id') id: string
-	) {
-		return this.noteService.update(noteId, dto, id)
+	async updateNote(@Param('id') id: string, @Body() dto: UpdateNoteDto) {
+		return this.noteService.update(id, dto)
 	}
 
 	@HttpCode(200)
-	@Delete(':noteId')
+	@Delete(':id')
 	@Auth()
-	async deleteNote(
-		@CurrentUser('id') id: string,
-		@Param('noteId') noteId: string
-	) {
-		return this.noteService.delete(id, noteId)
+	async deleteNote(@Param('id') id: string) {
+		return this.noteService.delete(id)
 	}
 
 	@HttpCode(200)
