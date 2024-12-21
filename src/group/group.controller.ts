@@ -12,7 +12,6 @@ import {
 	ValidationPipe
 } from '@nestjs/common'
 import { Auth } from 'src/auth/decorators/auth.decorator'
-import { CurrentUser } from 'src/auth/decorators/user.decorator'
 import { GroupDto } from './group.dto'
 import { GroupService } from './group.service'
 
@@ -21,8 +20,15 @@ export class GroupController {
 	constructor(private readonly groupService: GroupService) {}
 
 	@Get()
-	async getAll(@Query('searchTerm') searchTerm?: string) {
+	@Auth('admin')
+	async getAllGroups(@Query('searchTerm') searchTerm?: string) {
 		return this.groupService.getAll(searchTerm)
+	}
+
+	@Get('for-class')
+	@Auth('admin')
+	async getAllGroupsForClass() {
+		return this.groupService.getAllForClass()
 	}
 
 	@UsePipes(new ValidationPipe())
@@ -51,10 +57,7 @@ export class GroupController {
 	@HttpCode(200)
 	@Get(':groupId')
 	@Auth()
-	async getGroupById(
-		@Param('groupId') groupId: string,
-		@CurrentUser('id') id?: string
-	) {
-		return this.groupService.getById(groupId, id)
+	async getGroupById(@Param('groupId') groupId: string) {
+		return this.groupService.getById(groupId)
 	}
 }

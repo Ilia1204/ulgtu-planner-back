@@ -26,6 +26,13 @@ export class SubgroupService {
 		})
 	}
 
+	async getAllByGroup(groupId: string) {
+		return this.prisma.subgroup.findMany({
+			where: { groupId },
+			select: { id: true, name: true }
+		})
+	}
+
 	private async search(searchTerm: string) {
 		return this.prisma.subgroup.findMany({
 			where: {

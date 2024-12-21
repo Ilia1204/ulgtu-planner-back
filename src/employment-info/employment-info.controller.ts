@@ -21,6 +21,12 @@ export class EmploymentInfoController {
 		return this.employmentInfoService.getAll()
 	}
 
+	@Get('by-discipline/:disciplineId')
+	@Auth('admin')
+	async get(@Param('disciplineId') id: string) {
+		return this.employmentInfoService.getByDiscipline(id)
+	}
+
 	@Get(':id')
 	@Auth()
 	async getById(@Param('id') id: string) {

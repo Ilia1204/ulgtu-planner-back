@@ -21,6 +21,8 @@ import { StudentExamResultModule } from './student-exam-result/student-exam-resu
 import { StudentInfoModule } from './student-info/student-info.module'
 import { SubgroupModule } from './subgroup/subgroup.module'
 import { UserModule } from './user/user.module'
+import { NotificationModule } from './notification/notification.module';
+import { StatisticsModule } from './statistics/statistics.module';
 
 @Module({
 	imports: [
@@ -47,7 +49,9 @@ import { UserModule } from './user/user.module'
 		FileModule,
 		SubgroupModule,
 		NoteModule,
-		SearchModule
+		SearchModule,
+		NotificationModule,
+		StatisticsModule
 	]
 })
 export class AppModule {}

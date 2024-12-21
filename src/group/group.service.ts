@@ -8,7 +8,7 @@ import { returnGroupObject } from './return-group.object'
 export class GroupService {
 	constructor(private prisma: PrismaService) {}
 
-	async getById(groupId: string, userId?: string) {
+	async getById(groupId: string) {
 		const group = await this.prisma.group.findUnique({
 			where: { id: groupId },
 			select: {
@@ -37,8 +37,24 @@ export class GroupService {
 
 		const courseNumber = flows?.[0]?.flows?.[0]?.groups?.[0]?.courseNumber || 2
 
-		const classes = await this.prisma.class.findMany({
+		const today = new Date()
+
+		const currentMonday = new Date(today)
+		currentMonday.setDate(today.getDate() - today.getDay())
+
+		const nextMonday = new Date(currentMonday)
+		nextMonday.setDate(currentMonday.getDate() + 7)
+
+		const endOfNextWeek = new Date(nextMonday)
+		endOfNextWeek.setDate(nextMonday.getDate() + 6)
+
+		const classes = []
+
+		const classesGroup = await this.prisma.class.findMany({
 			where: {
+				schedule: {
+					date: { gte: currentMonday, lte: endOfNextWeek }
+				},
 				OR: [{ groupId }, { flows: { some: { id: flowId } }, courseNumber }]
 			},
 			include: {
@@ -71,8 +87,51 @@ export class GroupService {
 					}
 				}
 			},
-			orderBy: [{ schedule: { date: 'asc' } }, { pairNumbers: 'asc' }]
+			orderBy: [
+				{ schedule: { date: 'asc' } },
+				{ pairNumbers: 'asc' },
+				{ subgroup: { name: 'asc' } }
+			]
 		})
+
+		const finalTests = await this.prisma.finalTest.findMany({
+			where: {
+				schedule: {
+					date: { gte: currentMonday, lte: endOfNextWeek }
+				},
+				OR: [{ groupId }, { flows: { some: { id: flowId } }, courseNumber }]
+			},
+			orderBy: [{ schedule: { date: 'asc' } }, { pairNumbers: 'asc' }],
+			select: {
+				id: true,
+				pairNumbers: true,
+				types: true,
+				discipline: {
+					select: { name: true }
+				},
+				schedule: {
+					select: {
+						dayWeek: true,
+						date: true
+					}
+				},
+				room: {
+					select: {
+						name: true,
+						address: true
+					}
+				},
+				teacher: {
+					select: {
+						user: {
+							select: { fullName: true }
+						}
+					}
+				}
+			}
+		})
+
+		classes.push(...classesGroup, ...finalTests)
 
 		return { ...group, classes }
 	}
@@ -82,6 +141,15 @@ export class GroupService {
 
 		return this.prisma.group.findMany({
 			select: returnGroupObject
+		})
+	}
+
+	async getAllForClass() {
+		return this.prisma.group.findMany({
+			select: {
+				id: true,
+				name: true
+			}
 		})
 	}
 

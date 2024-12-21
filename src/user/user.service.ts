@@ -100,7 +100,30 @@ export class UserService {
 		if (searchTerm) return this.search(searchTerm)
 
 		return this.prisma.user.findMany({
-			orderBy: { createdAt: 'desc' }
+			orderBy: { createdAt: 'asc' },
+			select: {
+				...returnUserObject,
+				avatarPath: false,
+				chatGroups: false,
+				messages: false,
+				recoveryEmail: false,
+				pushToken: false,
+				studentInfo: {
+					select: {
+						group: {
+							select: {
+								name: true
+							}
+						},
+						subgroup: {
+							select: {
+								name: true
+							}
+						},
+						creditCardNumber: true
+					}
+				}
+			}
 		})
 	}
 
@@ -118,14 +141,18 @@ export class UserService {
 			}
 		})
 
-		if (user.roles.includes('assistant')) {
+		if (user.roles.includes('teacher') && user.roles.includes('student')) {
+			await this.employmentInfoService.create(user.id)
+			await this.studentInfoService.create(user.id)
+		} else if (user.roles.includes('assistant')) {
 			await this.employmentInfoService.create(user.id)
 			await this.studentInfoService.create(user.id)
 		} else if (user.roles.includes('student') || user.roles.includes('admin'))
 			await this.studentInfoService.create(user.id)
 		else if (
-			user.roles.includes('teacher') &&
-			user.roles.includes('course_creator')
+			(user.roles.includes('teacher') &&
+				user.roles.includes('course_creator')) ||
+			user.roles.includes('teacher')
 		)
 			await this.employmentInfoService.create(user.id)
 

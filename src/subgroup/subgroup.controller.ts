@@ -20,8 +20,16 @@ export class SubgroupController {
 	constructor(private readonly subgroupService: SubgroupService) {}
 
 	@Get()
+	@Auth('admin')
 	async getAllSubgroups(@Query('searchTerm') searchTerm?: string) {
 		return this.subgroupService.getAll(searchTerm)
+	}
+
+	@HttpCode(200)
+	@Get('by-group/:groupId')
+	@Auth('admin')
+	async getSubgroupsByGroup(@Param('groupId') groupId: string) {
+		return this.subgroupService.getAllByGroup(groupId)
 	}
 
 	@UsePipes(new ValidationPipe())

@@ -42,7 +42,7 @@ export class ScheduleService {
 
 		const schedules = await this.prisma.schedule.findMany({
 			where: {
-				weekType: { in: [weekType, weekNumber % 2 === 0 ? 'odd' : 'even'] }
+				weekType: { in: [weekType, weekNumber % 2 === 0 ? 'even' : 'odd'] }
 			}
 		})
 
@@ -65,13 +65,14 @@ export class ScheduleService {
 			select: {
 				roles: true,
 				studentInfo: {
-					include: {
+					select: {
 						group: {
 							select: {
 								id: true,
 								flowId: true
 							}
-						}
+						},
+						groupId: true
 					}
 				},
 				employmentInfo: true
@@ -80,10 +81,17 @@ export class ScheduleService {
 
 		if (!user) throw new NotFoundException('Пользователь не найден')
 
-		const semesterStartDate = new Date('2024-09-03')
-		const { weekNumber, weekType } = this.getCurrentWeek(semesterStartDate)
-
 		const schedules = []
+
+		const today = new Date()
+		const currentMonday = new Date(today)
+		currentMonday.setDate(today.getDate() - today.getDay())
+
+		const nextMonday = new Date(currentMonday)
+		nextMonday.setDate(currentMonday.getDate() + 7)
+
+		const endOfNextWeek = new Date(nextMonday)
+		endOfNextWeek.setDate(nextMonday.getDate() + 6)
 
 		if (user.studentInfo) {
 			const groupId = user.studentInfo.group?.id
@@ -94,13 +102,12 @@ export class ScheduleService {
 
 			const classes = await this.prisma.class.findMany({
 				where: {
-					OR: [{ groupId }, { flows: { some: { id: flowId } } }],
 					schedule: {
-						weekType: { in: [weekType, weekNumber % 2 === 0 ? 'odd' : 'even'] }
-					}
+						date: { gte: currentMonday, lte: endOfNextWeek }
+					},
+					OR: [{ groupId }, { flows: { some: { id: flowId } } }]
 				},
 				orderBy: [
-					{ schedule: { weekType: weekType === 'even' ? 'desc' : 'asc' } },
 					{ schedule: { date: 'asc' } },
 					{ pairNumbers: 'asc' },
 					{ subgroup: { name: 'asc' } }
@@ -113,8 +120,7 @@ export class ScheduleService {
 						select: {
 							dayWeek: true,
 							weekType: true,
-							date: true,
-							classes: { select: { pairNumbers: true } }
+							date: true
 						}
 					},
 					subgroup: {
@@ -141,24 +147,60 @@ export class ScheduleService {
 							OR: [{ isPrivate: false }, { isPrivate: true, userId: id }]
 						},
 						select: returnNoteObject,
-						orderBy: {
-							isPrivate: 'desc'
+						orderBy: { isPrivate: 'desc' }
+					}
+				}
+			})
+
+			const finalTests = await this.prisma.finalTest.findMany({
+				where: {
+					schedule: {
+						date: { gte: currentMonday, lte: endOfNextWeek }
+					},
+					OR: [{ groupId }, { flows: { some: { id: flowId } } }]
+				},
+				orderBy: [{ schedule: { date: 'asc' } }, { pairNumbers: 'asc' }],
+				select: {
+					id: true,
+					pairNumbers: true,
+					types: true,
+					discipline: {
+						select: { name: true }
+					},
+					schedule: {
+						select: {
+							dayWeek: true,
+							date: true
+						}
+					},
+					room: {
+						select: {
+							name: true,
+							address: true
+						}
+					},
+					teacher: {
+						select: {
+							user: {
+								select: { fullName: true }
+							}
 						}
 					}
 				}
 			})
-			schedules.push(...classes)
+
+			schedules.push(...classes, ...finalTests)
 		}
 
 		if (user.employmentInfo) {
-			const classes = await this.prisma.class.findMany({
+			const teacherClasses = await this.prisma.class.findMany({
 				where: {
-					teacher: {
-						userId: id
+					teacher: { userId: id },
+					schedule: {
+						date: { gte: currentMonday, lte: endOfNextWeek }
 					}
 				},
 				orderBy: [
-					{ schedule: { weekType: weekType === 'even' ? 'desc' : 'asc' } },
 					{ schedule: { date: 'asc' } },
 					{ pairNumbers: 'asc' },
 					{ subgroup: { name: 'asc' } }
@@ -171,9 +213,21 @@ export class ScheduleService {
 						select: {
 							dayWeek: true,
 							weekType: true,
-							date: true,
-							classes: { select: { pairNumbers: true } }
+							date: true
 						}
+					},
+					group: {
+						select: {
+							name: true
+						}
+					},
+					subgroup: {
+						select: {
+							name: true
+						}
+					},
+					discipline: {
+						select: { name: true }
 					},
 					teacher: {
 						select: {
@@ -183,12 +237,6 @@ export class ScheduleService {
 								}
 							}
 						}
-					},
-					subgroup: {
-						select: { name: true }
-					},
-					discipline: {
-						select: { name: true }
 					},
 					room: {
 						select: {
@@ -201,13 +249,54 @@ export class ScheduleService {
 							OR: [{ isPrivate: false }, { isPrivate: true, userId: id }]
 						},
 						select: returnNoteObject,
-						orderBy: {
-							isPrivate: 'desc'
+						orderBy: { isPrivate: 'desc' }
+					}
+				}
+			})
+
+			const teacherFinalTests = await this.prisma.finalTest.findMany({
+				where: {
+					teacher: { userId: id },
+					schedule: {
+						date: { gte: currentMonday, lte: endOfNextWeek }
+					}
+				},
+				orderBy: [{ schedule: { date: 'asc' } }, { pairNumbers: 'asc' }],
+				select: {
+					id: true,
+					pairNumbers: true,
+					types: true,
+					discipline: {
+						select: { name: true }
+					},
+					schedule: {
+						select: {
+							dayWeek: true,
+							date: true
+						}
+					},
+					group: {
+						select: {
+							name: true
+						}
+					},
+					room: {
+						select: {
+							name: true,
+							address: true
+						}
+					},
+					teacher: {
+						select: {
+							user: {
+								select: { fullName: true }
+							}
 						}
 					}
 				}
 			})
-			schedules.push(...classes)
+
+			schedules.push(...teacherClasses, ...teacherFinalTests)
 		}
 
 		return schedules
@@ -218,6 +307,7 @@ export class ScheduleService {
 			data: {
 				dayWeek: dto.dayWeek,
 				weekType: dto.weekType,
+				type: dto.type,
 				isPublic: dto.isPublic
 			}
 		})

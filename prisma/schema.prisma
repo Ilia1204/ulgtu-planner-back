@@ -24,6 +24,8 @@ model User {
   birthDate         DateTime @default(now()) @map("birth_date")
   libraryCardNumber String   @unique @map("library_card_number")
 
+  pushToken String? @map("push_token")
+
   studentInfo    StudentInfo?
   employmentInfo EmploymentInfo?
 
@@ -133,13 +135,14 @@ model FinalTest {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  date  DateTime?
-  types ExamType[] @default([exam])
+  pairNumbers  Int[]      @default([1]) @map("pair_numbers")
+  courseNumber Int?       @map("course_number")
+  types        ExamType[] @default([exam])
 
   isPublic Boolean @default(true) @map("is_public")
 
-  discipline   Discipline @relation(fields: [disciplineId], references: [id])
-  disciplineId String     @map("discipline_id")
+  discipline   Discipline? @relation(fields: [disciplineId], references: [id])
+  disciplineId String?     @map("discipline_id")
 
   room   Room?   @relation(fields: [roomId], references: [id])
   roomId String? @map("room_id")
@@ -147,10 +150,17 @@ model FinalTest {
   semester   Semester @relation(fields: [semesterId], references: [id])
   semesterId String   @map("semester_id")
 
-  teacher   EmploymentInfo @relation(fields: [teacherId], references: [id])
-  teacherId String         @map("teacher_info_id")
+  teacher   EmploymentInfo? @relation(fields: [teacherId], references: [id])
+  teacherId String?         @map("teacher_info_id")
+
+  schedule   Schedule? @relation(fields: [scheduleId], references: [id])
+  scheduleId String?   @map("schedule_id")
+
+  group   Group?  @relation(fields: [groupId], references: [id])
+  groupId String? @map("group_id")
 
   studentExamsResults StudentExamResult[]
+  flows               Flow[]
 
   @@map("final_test")
 }
@@ -160,13 +170,15 @@ model Schedule {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  date     DateTime @default(now())
-  dayWeek  DayWeek  @default(monday) @map("day_week")
-  weekType WeekType @default(odd) @map("week_type")
+  date     DateTime     @default(now())
+  dayWeek  DayWeek      @default(monday) @map("day_week")
+  weekType WeekType?    @default(odd) @map("week_type")
+  type     ScheduleType @default(regular)
 
   isPublic Boolean @default(true) @map("is_public")
 
-  classes Class[]
+  classes    Class[]
+  finalTests FinalTest[]
 
   @@map("schedule")
 }
@@ -191,8 +203,8 @@ model Class {
   teacher   EmploymentInfo? @relation(fields: [teacherId], references: [id])
   teacherId String?         @map("teacher_id")
 
-  discipline   Discipline @relation(fields: [disciplineId], references: [id])
-  disciplineId String     @map("discipline_id")
+  discipline   Discipline? @relation(fields: [disciplineId], references: [id])
+  disciplineId String?     @map("discipline_id")
 
   group   Group?  @relation(fields: [groupId], references: [id])
   groupId String? @map("group_id")
@@ -224,6 +236,8 @@ model Flow {
   classes   Class[]
   semesters Semester[]
 
+  finalTests FinalTest[]
+
   @@map("flow")
 }
 
@@ -249,9 +263,10 @@ model Group {
   flow   Flow?   @relation(fields: [flowId], references: [id])
   flowId String? @map("flow_id")
 
-  subgroups Subgroup[]
-  students  StudentInfo[]
-  classes   Class[]
+  subgroups  Subgroup[]
+  students   StudentInfo[]
+  classes    Class[]
+  finalTests FinalTest[]
 
   @@map("group")
 }
@@ -279,8 +294,9 @@ model Note {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  content   String
-  isPrivate Boolean @default(true) @map("is_private")
+  content    String
+  isPrivate  Boolean @default(true) @map("is_private")
+  pairNumber Int     @default(1) @map("pair_number")
 
   class   Class  @relation(fields: [classId], references: [id])
   classId String @map("class_id")
@@ -426,6 +442,12 @@ enum EducationLevel {
   specialty
   vocational
   postgraduate
+}
+
+enum ScheduleType {
+  regular
+  exam
+  credit_week
 }
 
 enum RoomType {

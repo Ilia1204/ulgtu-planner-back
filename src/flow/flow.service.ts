@@ -22,6 +22,12 @@ export class FlowService {
 		})
 	}
 
+	async getAllForClass() {
+		return this.prisma.flow.findMany({
+			select: { id: true, name: true }
+		})
+	}
+
 	private async search(searchTerm: string) {
 		return this.prisma.flow.findMany({
 			where: {

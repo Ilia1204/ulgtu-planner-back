@@ -1,4 +1,4 @@
-import { EducationLevel, StudyForm } from '@prisma/client'
+import { DayWeek, EducationLevel, StudyForm } from '@prisma/client'
 
 export const reverseStudyFormTranslations: Record<string, string> = {
 	очная: 'full_time',
@@ -28,4 +28,17 @@ export const getEducationLevelFromTranslation = (
 	value: string
 ): EducationLevel | null => {
 	return (reverseEducationalLevelTranslations[value] as EducationLevel) || null
+}
+
+export const reverseDayTranslations: Record<string, string> = {
+	Понедельник: 'monday',
+	Вторник: 'tuesday',
+	Среда: 'wednesday',
+	Четверг: 'thursday',
+	Пятница: 'friday',
+	Суббота: 'saturday'
+}
+
+export const getDayWeekTranslation = (value: string): DayWeek | null => {
+	return (reverseDayTranslations[value] as DayWeek) || null
 }

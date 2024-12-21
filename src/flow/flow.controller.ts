@@ -20,8 +20,16 @@ export class FlowController {
 	constructor(private readonly flowService: FlowService) {}
 
 	@Get()
-	async getAll(@Query('searchTerm') searchTerm?: string) {
+	@Auth('admin')
+	async getAllFlows(@Query('searchTerm') searchTerm?: string) {
 		return this.flowService.getAll(searchTerm)
+	}
+
+	@HttpCode(200)
+	@Get('for-class')
+	@Auth('admin')
+	async getAllFlowsForClass() {
+		return this.flowService.getAllForClass()
 	}
 
 	@UsePipes(new ValidationPipe())

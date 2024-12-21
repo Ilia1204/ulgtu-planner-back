@@ -28,9 +28,13 @@ export class NoteController {
 	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Auth()
-	@Post()
-	async createNote(@CurrentUser('id') id: string, @Body() dto: NoteDto) {
-		return this.noteService.create(id, dto)
+	@Post(':pairNumber')
+	async createNote(
+		@CurrentUser('id') id: string,
+		@Body() dto: NoteDto,
+		@Param('pairNumber') pairNumber: number
+	) {
+		return this.noteService.create(id, dto, pairNumber)
 	}
 
 	@UsePipes(new ValidationPipe())

@@ -1,25 +1,29 @@
 import { ExamType } from '@prisma/client'
 import {
 	IsArray,
-	IsDateString,
 	IsEnum,
+	IsNumber,
 	IsOptional,
 	IsString
 } from 'class-validator'
 
 export class FinalTestDto {
 	@IsOptional()
-	@IsDateString()
-	date: string
-
-	@IsOptional()
 	@IsArray()
 	@IsEnum(ExamType, { each: true })
 	types: ExamType[]
 
 	@IsOptional()
+	@IsArray()
+	pairNumbers: number[]
+
+	@IsOptional()
 	@IsString()
 	roomId: string
+
+	@IsOptional()
+	@IsNumber()
+	courseNumber: number
 
 	@IsOptional()
 	@IsString()
@@ -33,10 +37,23 @@ export class FinalTestDto {
 	@IsString()
 	semesterId: string
 
+	@IsOptional()
+	@IsString()
+	groupId: string
+
+	@IsOptional()
+	@IsString()
+	scheduleId: string
+
 	@IsArray()
 	@IsString({ each: true })
 	@IsOptional()
 	studentExamResult: string[]
+
+	@IsArray()
+	@IsString({ each: true })
+	@IsOptional()
+	flows: string[]
 }
 
 export type UpdateFinalTestDto = Partial<FinalTestDto>

@@ -52,7 +52,6 @@ export class FinalTestController {
 
 	@HttpCode(200)
 	@Get(':id')
-	@Auth('admin')
 	async getFinalTestById(@Param('id') id: string) {
 		return this.finalTestService.getById(id)
 	}

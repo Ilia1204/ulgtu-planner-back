@@ -33,6 +33,15 @@ export class ClassController {
 		return this.classService.create(dto)
 	}
 
+	@Get('get-by-time')
+	async getClassesByTimeAndDate(
+		@Query('dayWeek') dayWeek: string,
+		@Query('date') date: string,
+		@Query('pairNumber') pairNumber: number
+	) {
+		return this.classService.getClassesByTimeAndDate(dayWeek, date, +pairNumber)
+	}
+
 	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Put(':id')

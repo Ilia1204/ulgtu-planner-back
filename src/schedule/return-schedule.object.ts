@@ -5,6 +5,7 @@ export const returnScheduleObject: Prisma.ScheduleSelect = {
 	createdAt: true,
 	dayWeek: true,
 	weekType: true,
+	date: true,
 	classes: {
 		orderBy: {
 			pairNumbers: 'asc'

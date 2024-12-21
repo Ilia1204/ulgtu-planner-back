@@ -24,11 +24,12 @@ export class NoteService {
 		})
 	}
 
-	async create(userId: string, dto: NoteDto) {
+	async create(userId: string, dto: NoteDto, pairNumber: number) {
 		return this.prisma.note.create({
 			data: {
 				content: dto.content,
 				isPrivate: dto.isPrivate,
+				pairNumber: +pairNumber,
 				class: {
 					connect: {
 						id: dto.classId

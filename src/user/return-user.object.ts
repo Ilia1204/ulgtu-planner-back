@@ -8,16 +8,15 @@ export const returnUserObject: Prisma.UserSelect = {
 	password: false,
 	fullName: true,
 	username: true,
+	birthDate: true,
 	roles: true,
 	avatarPath: true,
+	pushToken: true,
 	phoneNumber: true,
 	recoveryEmail: true,
-	birthDate: true,
 	libraryCardNumber: true,
 	studentInfo: {
-		select: {
-			...returnStudentInfoObject
-		}
+		select: returnStudentInfoObject
 	},
 	employmentInfo: {
 		select: {

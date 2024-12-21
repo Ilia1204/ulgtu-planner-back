@@ -4,6 +4,8 @@ export const returnStudentInfoObject: Prisma.StudentInfoSelect = {
 	id: true,
 	userId: true,
 	creditCardNumber: true,
+	groupId: true,
+	subgroupId: true,
 	user: {
 		select: {
 			fullName: true,

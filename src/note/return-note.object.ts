@@ -5,6 +5,7 @@ export const returnNoteObject: Prisma.NoteSelect = {
 	createdAt: true,
 	content: true,
 	isPrivate: true,
+	pairNumber: true,
 	user: {
 		select: {
 			fullName: true

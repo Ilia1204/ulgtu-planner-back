@@ -11,11 +11,119 @@ import { RoomDto } from './room.dto'
 export class RoomService {
 	constructor(private prisma: PrismaService) {}
 
-	getById(id: string) {
-		return this.prisma.room.findUnique({
+	async getById(id: string) {
+		const room = await this.prisma.room.findUnique({
 			where: { id },
 			select: returnRoomObject
 		})
+
+		const today = new Date()
+
+		const currentMonday = new Date(today)
+		currentMonday.setDate(today.getDate() - today.getDay())
+
+		const nextMonday = new Date(currentMonday)
+		nextMonday.setDate(currentMonday.getDate() + 7)
+
+		const endOfNextWeek = new Date(nextMonday)
+		endOfNextWeek.setDate(nextMonday.getDate() + 6)
+
+		const classes = []
+
+		const classesGroup = await this.prisma.class.findMany({
+			where: {
+				schedule: {
+					date: { gte: currentMonday, lte: endOfNextWeek }
+				},
+				OR: [{ roomId: id }]
+			},
+			include: {
+				subgroup: { select: { name: true } },
+				teacher: {
+					select: {
+						user: { select: { fullName: true } }
+					}
+				},
+				discipline: { select: { name: true } },
+				room: {
+					select: { name: true, address: true }
+				},
+				group: {
+					select: {
+						name: true
+					}
+				},
+				flows: {
+					select: {
+						name: true,
+						groups: {
+							select: {
+								name: true,
+								courseNumber: true
+							}
+						}
+					}
+				},
+				schedule: {
+					select: {
+						dayWeek: true,
+						weekType: true,
+						date: true
+					}
+				}
+			},
+			orderBy: [
+				{ schedule: { date: 'asc' } },
+				{ pairNumbers: 'asc' },
+				{ subgroup: { name: 'asc' } }
+			]
+		})
+
+		const finalTests = await this.prisma.finalTest.findMany({
+			where: {
+				schedule: {
+					date: { gte: currentMonday, lte: endOfNextWeek }
+				},
+				OR: [{ roomId: id }]
+			},
+			orderBy: [{ schedule: { date: 'asc' } }, { pairNumbers: 'asc' }],
+			select: {
+				id: true,
+				pairNumbers: true,
+				types: true,
+				discipline: {
+					select: { name: true }
+				},
+				schedule: {
+					select: {
+						dayWeek: true,
+						date: true
+					}
+				},
+				group: {
+					select: {
+						name: true
+					}
+				},
+				room: {
+					select: {
+						name: true,
+						address: true
+					}
+				},
+				teacher: {
+					select: {
+						user: {
+							select: { fullName: true }
+						}
+					}
+				}
+			}
+		})
+
+		classes.push(...classesGroup, ...finalTests)
+
+		return { ...room, classes }
 	}
 
 	getAll(searchTerm?: string) {
@@ -27,6 +135,14 @@ export class RoomService {
 	}
 
 	private async search(searchTerm: string) {
+		const today = new Date()
+		const currentMonday = new Date(today)
+		currentMonday.setDate(today.getDate() - today.getDay())
+		const nextMonday = new Date(currentMonday)
+		nextMonday.setDate(currentMonday.getDate() + 7)
+		const endOfNextWeek = new Date(nextMonday)
+		endOfNextWeek.setDate(nextMonday.getDate() + 6)
+
 		const rooms = await this.prisma.room.findMany({
 			where: {
 				OR: [
@@ -44,16 +160,46 @@ export class RoomService {
 					}
 				]
 			},
-			select: returnRoomObject,
+			select: {
+				...returnRoomObject,
+				finalTests: {
+					where: {
+						schedule: {
+							date: { gte: currentMonday, lte: endOfNextWeek }
+						}
+					},
+					select: {
+						id: true,
+						pairNumbers: true,
+						types: true,
+						discipline: {
+							select: {
+								name: true
+							}
+						},
+						schedule: {
+							select: {
+								dayWeek: true,
+								date: true
+							}
+						},
+						teacher: {
+							select: {
+								user: {
+									select: { fullName: true }
+								}
+							}
+						}
+					}
+				}
+			},
 			orderBy: { name: 'asc' }
 		})
 
 		const studyFormValue = getStudyFormFromTranslation(searchTerm.toLowerCase())
-
 		const educationLevelValue = getEducationLevelFromTranslation(
 			searchTerm.toLowerCase()
 		)
-
 		const courseNumberMatch = searchTerm.match(/\d+/)
 		const courseNumberValue = courseNumberMatch
 			? Number(courseNumberMatch[0])
@@ -86,13 +232,16 @@ export class RoomService {
 				educationLevel: true,
 				studyForm: true,
 				classes: {
+					where: {
+						schedule: {
+							date: { gte: currentMonday, lte: endOfNextWeek }
+						}
+					},
 					select: {
 						type: true,
 						pairNumbers: true,
 						subgroup: {
-							select: {
-								name: true
-							}
+							select: { name: true }
 						},
 						room: {
 							select: {
@@ -107,8 +256,40 @@ export class RoomService {
 							}
 						},
 						discipline: {
+							select: { name: true }
+						}
+					}
+				},
+				finalTests: {
+					where: {
+						schedule: {
+							date: { gte: currentMonday, lte: endOfNextWeek }
+						}
+					},
+					select: {
+						id: true,
+						pairNumbers: true,
+						types: true,
+						discipline: {
+							select: { name: true }
+						},
+						schedule: {
 							select: {
-								name: true
+								dayWeek: true,
+								date: true
+							}
+						},
+						teacher: {
+							select: {
+								user: {
+									select: { fullName: true }
+								}
+							}
+						},
+						room: {
+							select: {
+								name: true,
+								address: true
 							}
 						}
 					}
@@ -145,6 +326,11 @@ export class RoomService {
 				},
 				position: true,
 				classes: {
+					where: {
+						schedule: {
+							date: { gte: currentMonday, lte: endOfNextWeek }
+						}
+					},
 					select: {
 						type: true,
 						pairNumbers: true,
@@ -155,9 +341,7 @@ export class RoomService {
 							}
 						},
 						flows: {
-							select: {
-								name: true
-							}
+							select: { name: true }
 						},
 						schedule: {
 							select: {
@@ -166,17 +350,40 @@ export class RoomService {
 							}
 						},
 						discipline: {
+							select: { name: true }
+						}
+					}
+				},
+				finalTests: {
+					where: {
+						schedule: {
+							date: { gte: currentMonday, lte: endOfNextWeek }
+						}
+					},
+					select: {
+						id: true,
+						pairNumbers: true,
+						types: true,
+						discipline: {
+							select: { name: true }
+						},
+						schedule: {
 							select: {
-								name: true
+								dayWeek: true,
+								date: true
+							}
+						},
+						room: {
+							select: {
+								name: true,
+								address: true
 							}
 						}
 					}
 				}
 			},
 			orderBy: {
-				user: {
-					fullName: 'asc'
-				}
+				user: { fullName: 'asc' }
 			}
 		})
 

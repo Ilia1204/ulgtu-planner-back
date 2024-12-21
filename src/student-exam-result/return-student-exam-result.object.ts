@@ -16,9 +16,22 @@ export const returnStudentExamResultObject: Prisma.StudentExamResultSelect = {
 	},
 	finalTest: {
 		select: {
-			date: true,
+			pairNumbers: true,
 			discipline: {
 				select: {
+					name: true
+				}
+			},
+			schedule: {
+				select: {
+					id: true,
+					dayWeek: true,
+					date: true
+				}
+			},
+			group: {
+				select: {
+					id: true,
 					name: true
 				}
 			},

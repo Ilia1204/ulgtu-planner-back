@@ -3,8 +3,9 @@ import { Prisma } from '@prisma/client'
 export const returnFinalTestObject: Prisma.FinalTestSelect = {
 	id: true,
 	createdAt: true,
-	date: true,
+	pairNumbers: true,
 	types: true,
+	updatedAt: true,
 	discipline: {
 		select: {
 			name: true
@@ -12,6 +13,8 @@ export const returnFinalTestObject: Prisma.FinalTestSelect = {
 	},
 	teacher: {
 		select: {
+			id: true,
+			position: true,
 			user: {
 				select: {
 					fullName: true
@@ -21,8 +24,10 @@ export const returnFinalTestObject: Prisma.FinalTestSelect = {
 	},
 	room: {
 		select: {
+			id: true,
 			name: true,
-			address: true
+			address: true,
+			type: true
 		}
 	},
 	semester: {
@@ -30,6 +35,21 @@ export const returnFinalTestObject: Prisma.FinalTestSelect = {
 			number: true
 		}
 	},
+	schedule: {
+		select: {
+			id: true,
+			dayWeek: true,
+			date: true
+		}
+	},
+	group: {
+		select: {
+			id: true,
+			name: true
+		}
+	},
+	courseNumber: true,
+	flows: true,
 	studentExamsResults: {
 		select: {
 			result: true,

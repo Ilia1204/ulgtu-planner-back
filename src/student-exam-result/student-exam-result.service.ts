@@ -42,6 +42,19 @@ export class StudentExamResultService {
 								}
 							}
 						},
+						group: {
+							select: {
+								id: true,
+								name: true
+							}
+						},
+						schedule: {
+							select: {
+								id: true,
+								dayWeek: true,
+								date: true
+							}
+						},
 						discipline: {
 							select: {
 								name: true
@@ -53,11 +66,27 @@ export class StudentExamResultService {
 								address: true
 							}
 						},
-						date: true
+						pairNumbers: true
 					}
 				}
 			},
-			orderBy: [{ type: 'asc' }, { finalTest: { date: 'asc' } }]
+			orderBy: [
+				{
+					type: 'asc'
+				},
+				{
+					finalTest: {
+						schedule: {
+							date: 'asc'
+						}
+					}
+				},
+				{
+					finalTest: {
+						pairNumbers: 'asc'
+					}
+				}
+			]
 		})
 	}
 

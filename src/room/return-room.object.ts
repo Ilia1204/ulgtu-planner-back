@@ -10,6 +10,7 @@ export const returnRoomObject: Prisma.RoomSelect = {
 		select: {
 			group: {
 				select: {
+					id: true,
 					name: true
 				}
 			},

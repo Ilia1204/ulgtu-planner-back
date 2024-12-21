@@ -7,6 +7,8 @@ export const returnClassObject: Prisma.ClassSelect = {
 	type: true,
 	courseNumber: true,
 	updatedAt: true,
+	subgroupId: true,
+	groupId: true,
 	room: {
 		select: {
 			id: true,
@@ -17,16 +19,19 @@ export const returnClassObject: Prisma.ClassSelect = {
 	},
 	group: {
 		select: {
+			id: true,
 			name: true
 		}
 	},
 	subgroup: {
 		select: {
+			id: true,
 			name: true
 		}
 	},
 	schedule: {
 		select: {
+			id: true,
 			dayWeek: true,
 			date: true
 		}
@@ -44,18 +49,20 @@ export const returnClassObject: Prisma.ClassSelect = {
 	},
 	discipline: {
 		select: {
-			name: true
-		}
-	},
-	flows: {
-		select: {
-			groups: {
+			id: true,
+			name: true,
+			teachers: {
 				select: {
-					name: true
+					user: {
+						select: {
+							fullName: true
+						}
+					}
 				}
 			}
 		}
 	},
+	flows: true,
 	attachments: true,
 	notes: true
 }

@@ -11,6 +11,7 @@ export const returnDisciplineObject: Prisma.DisciplineSelect = {
 	},
 	teachers: {
 		select: {
+			id: true,
 			position: true,
 			user: {
 				select: {

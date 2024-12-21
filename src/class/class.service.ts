@@ -1,14 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import * as dayjs from 'dayjs'
 import { DisciplineService } from 'src/discipline/discipline.service'
 import { EmploymentInfoService } from 'src/employment-info/employment-info.service'
 import { GroupService } from 'src/group/group.service'
 import { returnNoteObject } from 'src/note/return-note.object'
+import { NotificationService } from 'src/notification/notification.service'
 import { PrismaService } from 'src/prisma.service'
 import { RoomService } from 'src/room/room.service'
 import { ScheduleService } from 'src/schedule/schedule.service'
 import { SubgroupService } from 'src/subgroup/subgroup.service'
+import { returnUserObject } from 'src/user/return-user.object'
+import { formatDisciplineName } from 'src/utils/format-discipline-name'
+import { getDayWeekTranslation } from 'src/utils/translate-to-english'
 import { ClassDto, UpdateClassDto } from './class.dto'
 import { returnClassObject } from './return-class.object'
+require('dayjs/locale/ru')
+
+dayjs.locale('ru')
 
 @Injectable()
 export class ClassService {
@@ -19,7 +27,8 @@ export class ClassService {
 		private employmentInfoService: EmploymentInfoService,
 		private disciplineService: DisciplineService,
 		private groupService: GroupService,
-		private subgroupService: SubgroupService
+		private subgroupService: SubgroupService,
+		private notificationService: NotificationService
 	) {}
 
 	getById(id: string, userId?: string) {
@@ -27,6 +36,17 @@ export class ClassService {
 			where: { id },
 			select: {
 				...returnClassObject,
+				flows: {
+					select: {
+						id: true,
+						name: true,
+						groups: {
+							select: {
+								name: true
+							}
+						}
+					}
+				},
 				notes: {
 					where: {
 						classId: id,
@@ -45,7 +65,22 @@ export class ClassService {
 		if (searchTerm) return this.search(searchTerm)
 
 		return this.prisma.class.findMany({
-			select: returnClassObject
+			select: { ...returnClassObject, isPublic: true },
+			orderBy: [
+				{
+					group: {
+						name: 'asc'
+					}
+				},
+				{
+					schedule: {
+						date: 'asc'
+					}
+				},
+				{
+					pairNumbers: 'asc'
+				}
+			]
 		})
 	}
 
@@ -71,6 +106,32 @@ export class ClassService {
 					}
 				]
 			}
+		})
+	}
+
+	async getClassesByTimeAndDate(
+		dayWeek: string,
+		date: string,
+		pairNumber: number
+	) {
+		if (!pairNumber || !date || !dayWeek)
+			throw new NotFoundException(
+				'Один или несколько параметров не были переданы'
+			)
+
+		const translatedDayWeek = getDayWeekTranslation(dayWeek)
+
+		return await this.prisma.class.findMany({
+			where: {
+				schedule: {
+					dayWeek: translatedDayWeek,
+					date
+				},
+				pairNumbers: {
+					has: pairNumber
+				}
+			},
+			select: { ...returnClassObject, notes: false }
 		})
 	}
 
@@ -110,6 +171,7 @@ export class ClassService {
 				pairNumbers: dto.pairNumbers,
 				type: dto.type,
 				isPublic: dto.isPublic,
+				courseNumber: dto.courseNumber,
 				room: {
 					connect: {
 						id: dto.roomId
@@ -126,14 +188,23 @@ export class ClassService {
 						id: dto.disciplineId
 					}
 				},
+				...(dto.flows
+					? {
+							flows: {
+								connect: dto.flows.map(flowId => ({
+									id: flowId
+								}))
+							}
+					  }
+					: {}),
 				group: groupConnect,
 				subgroup: subgroupConnect
 			}
 		})
 	}
 
-	update(id: string, dto: UpdateClassDto) {
-		const lesson = this.getById(id)
+	async update(id: string, dto: UpdateClassDto) {
+		const lesson = await this.getById(id)
 		if (!lesson) throw new NotFoundException('Занятие не найдено')
 
 		const {
@@ -149,7 +220,17 @@ export class ClassService {
 			flows
 		} = dto
 
-		return this.prisma.class.update({
+		const currentLesson = await this.prisma.class.findUnique({
+			where: { id },
+			select: {
+				roomId: true,
+				groupId: true,
+				subgroupId: true,
+				scheduleId: true
+			}
+		})
+
+		const updatedLesson = await this.prisma.class.update({
 			where: { id },
 			data: {
 				type,
@@ -159,7 +240,7 @@ export class ClassService {
 				teacherId,
 				disciplineId,
 				scheduleId,
-				subgroupId,
+				subgroupId: subgroupId || null,
 				groupId,
 				flows: {
 					set: flows.map(flowId => ({ id: flowId })),
@@ -170,6 +251,105 @@ export class ClassService {
 			},
 			select: returnClassObject
 		})
+
+		if (currentLesson.roomId !== roomId) {
+			const schedule = await this.prisma.schedule.findUnique({
+				where: { id: currentLesson.scheduleId },
+				select: { date: true }
+			})
+
+			const room = await this.prisma.room.findUnique({
+				where: { id: roomId },
+				select: { name: true }
+			})
+
+			const students = await this.prisma.user.findMany({
+				where: {
+					studentInfo: {
+						groupId: currentLesson.groupId,
+						...(currentLesson.subgroupId && {
+							subgroupId: currentLesson.subgroupId
+						})
+					}
+				},
+				select: returnUserObject
+			})
+
+			const teachers = await this.prisma.user.findMany({
+				where: {
+					employmentInfo: {
+						classes: {
+							some: {
+								id
+							}
+						}
+					}
+				},
+				select: returnUserObject
+			})
+
+			const classType = `${
+				updatedLesson.type === 'lab'
+					? 'Лаба'
+					: updatedLesson.type === 'lecture'
+					? 'Лекция'
+					: 'Практика'
+			}`
+
+			const notifications = [
+				...students.map(
+					async student =>
+						await this.notificationService.sendNotification(
+							student.id,
+							'✨ Изменение аудитории ✨',
+							`📅 ${classType} «${formatDisciplineName(
+								updatedLesson.discipline.name
+							)}», которая состоится ${dayjs(schedule.date).format(
+								'DD.MM.YYYY'
+							)}, пройдёт в ${
+								updatedLesson.room.type === 'auditorium' ? 'ауд.' : 'каб.'
+							} ${room.name}`
+						)
+				),
+				...teachers.map(
+					async teacher =>
+						await this.notificationService.sendNotification(
+							teacher.id,
+							'✨ Изменение аудитории ✨',
+							`📅 ${classType} «${formatDisciplineName(
+								updatedLesson.discipline.name
+							)}», которая состоится у ${
+								updatedLesson.group
+									? `группы ${
+											updatedLesson.subgroup
+												? `${updatedLesson.group.name} - ${updatedLesson.subgroup.name}`
+												: updatedLesson.group.name
+									  }`
+									: `потоков ${updatedLesson.flows
+											.map(flow => {
+												const name = flow.name
+												const abbreviationMatch = name.match(/\(([^)]+)\)/)
+
+												if (abbreviationMatch) return abbreviationMatch[1]
+												else {
+													return name
+														.split(' ')
+														.map(word => word.charAt(0).toUpperCase())
+														.join('')
+												}
+											})
+											.join(', ')}`
+							} ${dayjs(schedule.date).format('DD.MM.YYYY')}, пройдёт в ${
+								updatedLesson.room.type === 'auditorium' ? 'ауд.' : 'каб.'
+							} ${room.name}`
+						)
+				)
+			]
+
+			await Promise.all(notifications)
+		}
+
+		return updatedLesson
 	}
 
 	delete(id: string) {

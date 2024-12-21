@@ -3,6 +3,7 @@ import {
 	IsArray,
 	IsBoolean,
 	IsEnum,
+	IsNumber,
 	IsOptional,
 	IsString
 } from 'class-validator'
@@ -19,6 +20,10 @@ export class ClassDto {
 	@IsOptional()
 	@IsArray()
 	pairNumbers: number[]
+
+	@IsOptional()
+	@IsNumber()
+	courseNumber: number
 
 	@IsOptional()
 	@IsString()

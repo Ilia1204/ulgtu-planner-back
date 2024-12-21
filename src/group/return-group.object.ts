@@ -15,6 +15,11 @@ export const returnGroupObject: Prisma.GroupSelect = {
 			semesters: {
 				select: {
 					id: true,
+					flow: {
+						select: {
+							name: true
+						}
+					},
 					number: true
 				}
 			}
