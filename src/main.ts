@@ -8,7 +8,7 @@ async function bootstrap() {
 	app.setGlobalPrefix('api')
 	app.use(cookieParser())
 	app.enableCors({
-		origin: ['https://c73f-176-116-140-117.ngrok-free.app'],
+		origin: ['http://localhost:4200'],
 		credentials: true,
 		exposedHeaders: 'set-cookie'
 	})

@@ -13,15 +13,16 @@ export class EmploymentInfoService {
 		})
 
 		const today = new Date()
+		const localDayOfWeek = today.getDay()
 
 		const currentMonday = new Date(today)
-		currentMonday.setDate(today.getDate() - today.getDay())
+		currentMonday.setDate(today.getDate() - localDayOfWeek - 7)
 
 		const nextMonday = new Date(currentMonday)
 		nextMonday.setDate(currentMonday.getDate() + 7)
 
 		const endOfNextWeek = new Date(nextMonday)
-		endOfNextWeek.setDate(nextMonday.getDate() + 6)
+		endOfNextWeek.setDate(nextMonday.getDate() + 7)
 
 		const classes = []
 

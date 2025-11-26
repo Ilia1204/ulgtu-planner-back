@@ -5,10 +5,10 @@ import { FlowService } from 'src/flow/flow.service'
 import { GroupService } from 'src/group/group.service'
 import { PrismaService } from 'src/prisma.service'
 import { RoomService } from 'src/room/room.service'
+import { ScheduleService } from 'src/room/schedule/schedule.service'
 import { SemesterService } from 'src/semester/semester.service'
 import { FinalTestController } from './final-test.controller'
 import { FinalTestService } from './final-test.service'
-import { ScheduleService } from 'src/schedule/schedule.service'
 
 @Module({
 	controllers: [FinalTestController],

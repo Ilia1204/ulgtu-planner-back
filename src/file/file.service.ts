@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import * as fs from 'fs'
 import { ensureDir } from 'fs-extra'
 import * as path from 'path'
-import { IFileResponse } from './file.interface'
+import type { IFileResponse } from './file.interface'
 
 @Injectable()
 export class FileService {

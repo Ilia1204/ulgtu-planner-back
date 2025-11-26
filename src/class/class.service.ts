@@ -7,7 +7,7 @@ import { returnNoteObject } from 'src/note/return-note.object'
 import { NotificationService } from 'src/notification/notification.service'
 import { PrismaService } from 'src/prisma.service'
 import { RoomService } from 'src/room/room.service'
-import { ScheduleService } from 'src/schedule/schedule.service'
+import { ScheduleService } from 'src/room/schedule/schedule.service'
 import { SubgroupService } from 'src/subgroup/subgroup.service'
 import { returnUserObject } from 'src/user/return-user.object'
 import { formatDisciplineName } from 'src/utils/format-discipline-name'
@@ -43,8 +43,14 @@ export class ClassService {
 						groups: {
 							select: {
 								name: true
+							},
+							orderBy: {
+								name: 'asc'
 							}
 						}
+					},
+					orderBy: {
+						name: 'asc'
 					}
 				},
 				notes: {

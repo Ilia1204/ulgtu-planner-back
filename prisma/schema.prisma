@@ -472,8 +472,8 @@ enum ExamResult {
   excellent
   good
   satisfactory
-  credited
   fail
+  credited
   not_credited
   absense
   none

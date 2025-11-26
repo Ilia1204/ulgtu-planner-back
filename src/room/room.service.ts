@@ -18,18 +18,19 @@ export class RoomService {
 		})
 
 		const today = new Date()
+		const localDayOfWeek = today.getDay()
 
 		const currentMonday = new Date(today)
-		currentMonday.setDate(today.getDate() - today.getDay())
+		currentMonday.setDate(today.getDate() - localDayOfWeek - 7)
 
 		const nextMonday = new Date(currentMonday)
 		nextMonday.setDate(currentMonday.getDate() + 7)
 
 		const endOfNextWeek = new Date(nextMonday)
-		endOfNextWeek.setDate(nextMonday.getDate() + 6)
+		endOfNextWeek.setDate(nextMonday.getDate() + 7)
 
 		const classes = []
-
+		
 		const classesGroup = await this.prisma.class.findMany({
 			where: {
 				schedule: {
@@ -73,14 +74,14 @@ export class RoomService {
 				}
 			},
 			orderBy: [
-				{ schedule: { date: 'asc' } },
+				{ schedule : { date: 'asc' } },
 				{ pairNumbers: 'asc' },
 				{ subgroup: { name: 'asc' } }
 			]
 		})
 
 		const finalTests = await this.prisma.finalTest.findMany({
-			where: {
+			where: {		
 				schedule: {
 					date: { gte: currentMonday, lte: endOfNextWeek }
 				},

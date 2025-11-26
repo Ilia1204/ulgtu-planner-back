@@ -8,7 +8,7 @@ import {
 	UseInterceptors
 } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express/multer/interceptors/files.interceptor'
-import { IFileResponseData } from './file.interface'
+import type { IFileResponseData } from './file.interface'
 import { FileService } from './file.service'
 
 @Controller('files')
